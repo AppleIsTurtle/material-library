@@ -23,3 +23,6 @@ bmesh), importé par les scripts des projets ; plan : [docs/plans/MASTER.md](doc
   choix chiffré (« l'argent là où ça se voit »).
 - Plusieurs sessions Claude peuvent travailler ici en même temps : chacune ne touche que ses dossiers, et commite **dans la même
   commande** que son `git add` (l'index est partagé) ; le `summary.md` racine n'est mis à jour que par la session qui coordonne.
+- **Dépôt public** (GitHub, MIT, depuis la 0.3.1) : n'y écrire ni nom de personne autre que Lou (l'imprimeur FDM, les amis), ni
+  prix de revient, prix de vente ou marge de ses produits (les prix publics des fournisseurs restent) ; commits signés avec l'adresse
+  noreply de GitHub. L'historique de travail d'avant la 0.3.1 est dans le remote privé `prive` : ne jamais le pousser sur `origin`.
