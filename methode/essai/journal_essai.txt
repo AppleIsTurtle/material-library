@@ -1,0 +1,69 @@
+﻿
+===== ÉTAPE 1 : références et normes
+  largeur_nominale = 146.050 (estimée) — 5,75 in = 146,05 : largeur des pupitres à rails (relevé MFS, grand-format/plan.md)
+  pas_hauteur = 9.525 (estimée) — 3/8 in = 9,525 : cran des rails (MFS, transpondeur/references.md) ; vérifié sur les deux panneaux relevés : 66,3 = 7 crans − jeu, 56,8 = 6 crans − jeu
+  jeu = 0.381 (estimée) — 0,015 in = 0,38 : écart entre la cote nominale et les panneaux relevés (145,7 pour 146,05)
+  panneau de 5 crans : 145.67 × 47.24 (estimé)
+
+===== ÉTAPE 2 : taille et architecture
+  empilage (y) : plaque 0 → 3.0, embase → 4.6, boîte à lumière → 12.8, carte → 14.4, caisson de 30
+
+===== ÉTAPE 3 : matériaux et lieu de fabrication
+  plaque acrylique « jour / nuit » (atelier laser) ; embase, boîte à lumière, collerettes, bouton : PLA chez l'imprimeur FDM ;
+  caisson et supports : SLA JLC Black ; inserts posés par JLC ; visserie du commerce
+
+===== ÉTAPE 4 : fixations
+DESSIN REMARQUE attache (-66.33 ; 9.33) : 1.35 jusqu'au bord → trou ouvert en U (angles R 1)
+DESSIN REMARQUE attache (66.33 ; 9.33) : 1.35 jusqu'au bord → trou ouvert en U (angles R 1)
+DESSIN REMARQUE attache (-66.33 ; 37.91) : 1.35 jusqu'au bord → trou ouvert en U (angles R 1)
+DESSIN REMARQUE attache (66.33 ; 37.91) : 1.35 jusqu'au bord → trou ouvert en U (angles R 1)
+CONTROLE DESSIN gabarit : 0 erreur(s), 4 remarque(s)
+  colonnes : R 5.70, 2.90 de matière autour de l'insert M4 ; boîte à lumière jusqu'à x ± 60.33
+
+===== ÉTAPE 5 : lumière
+  sans jours dans l'embase (piège du F-COM2) :
+TROU BOUCHE GAB_EMBASE (-30.0 ; 37.5) à y = 3.00
+TROU BOUCHE GAB_EMBASE (40.0 ; 33.0) à y = 3.00
+CONTROLE TROUS : 2 bouché(s) sur 4
+  avec les jours :
+CONTROLE TROUS : 0 bouché(s) sur 4
+
+===== ÉTAPE 6 : supports et pose
+  supports clipsés 2, patins 4, pose inclinée de 15.0°
+
+===== ÉTAPE 7 : contrôles automatiques
+CONTROLE TROUS : 0 bouché(s) sur 8
+CONTROLE TROUS : 0 bouché(s) sur 4
+CONTROLE COLLISIONS : 0 collision(s) à corriger, 4 contact(s) voulu(s), 37 pièces
+CONTROLE PAROIS : 0 zone(s) sous 1.2
+CONTROLE PAROIS : 0 zone(s) sous 0.8
+CONTROLE PAROIS : 0 zone(s) sous 1.0
+  arêtes de plus de 45° (avant le nœud Bevel du rendu) : {'PLAQUE': 562, 'CAISSON': 3155, 'BOITE_LUMIERE': 440}
+
+===== ÉTAPE 9 : revue de faisabilité et chiffrage
+  volume CAISSON : 47.6 cm³
+  volume SUPPORT_G : 12.3 cm³
+  volume BOITE_LUMIERE : 30.0 cm³
+  volume EMBASE : 9.7 cm³
+| Poste | Se voit ? | € / boîtier | Choix |
+|---|---|---|---|
+| Caisson SLA JLC Black | **oui** | 8.63 | 47.6 cm³, poncé + huilé |
+| 2 supports SLA JLC Black | **oui** | 4.46 | clipsés, pose à 15° |
+| 8 inserts posés par JLC | dos : oui | 4.55 | 4 M4 (attaches) + 4 M3 (pupitre) |
+| Embase + boîte à lumière + collerettes + bouton, PLA chez l'imprimeur FDM | embase : oui | 0.64 | pièces cachées : le moins cher |
+| Plaque acrylique « jour / nuit » | **oui** | 3.00–15.00 | ⚠ prix inconnu : échantillon obligatoire |
+| Visserie (4 M4 × 8 DIN 84 inox, 2 M3 fraisées + écrous) | **oui** | 0.80–1.50 | au détail |
+| Port JLC des pièces SLA | non | 2.72 | au poids ; une commande groupée par série ⚠ |
+| **Total** | | **24.80–37.50** |  |
+
+===== ÉTAPE 8 : rendu : asset → aperçus
+  posé : point le plus bas à z = 0.00 (patins sur le bureau attendus à 0)
+  asset d'essai : G:\Blender\Bibliotheque\essais\panneau_gabarit.blend
+  aperçu apercu_hero.jpg
+  aperçu apercu_face.jpg
+  aperçu apercu_dos.jpg
+  aperçu apercu_nuit.jpg
+
+===== BILAN DE L'ESSAI
+  dessin : 0 erreur(s), 4 remarque(s) ; trous bouchés : 0 (vis), 0 (attaches) ; lumière : 2 bouchée(s) sans jours → 0 avec ; collisions : 0 (4 contacts voulus) ; parois minces : boîte 0, collerettes 0, caisson 0
+

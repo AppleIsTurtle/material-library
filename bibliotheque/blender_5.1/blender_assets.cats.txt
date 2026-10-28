@@ -1,0 +1,14 @@
+# This is an Asset Catalog Definition file for Blender.
+# Généré par material-library/blender/construire_bibliotheque.py
+
+VERSION 1
+
+bfbb7361-e435-5610-9f36-30b325fcad43:Caoutchoucs:Caoutchoucs
+cfbfb36b-59fc-56f7-b653-a6489f1634f5:Impression FDM:Impression FDM
+079e3dbd-18da-5a4e-ab8f-e8e1a4beb7af:Impression FDM/Couches:Impression FDM-Couches
+822c9fa7-73f4-5ac7-8e6d-f21452e2a676:Métaux:Métaux
+bf3e11ce-18d7-50d0-b6d5-d7c989939e94:Nylon:Nylon
+83e06ec6-225a-5dcc-8092-a5f3c764d33b:Peintures:Peintures
+2ed301ca-4208-5d17-82eb-35f4b97f7bee:Résines:Résines
+81bd92c5-7a11-52dd-ac05-b86543fe2d43:Verres:Verres
+b9f95c8e-93fd-55d1-89ce-ea8bb7f500c5:Visserie:Visserie
