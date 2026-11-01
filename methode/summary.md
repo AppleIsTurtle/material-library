@@ -7,6 +7,7 @@ Méthode écrite (arêtes, matières, procédés, fixations, conception d'un bo�
 | aretes.md | Règle « aucune arête vive » : géométrie ou nœud Bevel, rayons par matière, lissage après booléen, congés et encoches, exceptions, contrôle | material_library/aretes.py, outils/planches/planche_aretes.py |
 | matieres.md | Catalogue des matières : règles de Lou, champs d'une fiche, ajouter une matière, bases compensées (studio et vue de mesure), bibliothèque dans Blender (déclaration, Append / Link, unités) | material_library/matieres/, outils/planches/planche_matieres.py |
 | mousses.md | Mousse PE à cellules fermées : ce que dit la fabrication, vraie géométrie et matière calibrée, taille et proportions mesurées, limites, sources | material_library/matieres/mousse.py, outils/mousse/ |
+| cartons.md | Carton ondulé kraft cannelure E et encre : ce que dit la fabrication, mesures, limites | `matieres/carton.py` |
 | procedes.md | Quel procédé pour quelle pièce, limites de conception (FDM, SLA, MJF, acrylique), coûts relevés et datés, chaîne FDM (traces, lettres), encre | material_library/matieres/procedes.py, material_library/impression/ |
 | conception_boitier.md | **méthode de conception d'un boîtier à façade** en 9 étapes (références et normes, taille et architecture, matériaux et chiffrage, fixations, lumière, supports, contrôles, rendu, revue de faisabilité) : ce qu'on décide, comment on le vérifie, ce que ça coûte ; liste des 27 pièges vécus sur le F-COM2 et le transpondeur | `material_library/conception/`, `material_library/aretes.py`, `fixations_facade.md` |
 | fixations_facade.md | Règle des fixations de façade (attaches M4 DIN 84 en collerette, petites vis M3 ISO 7046 à fleur), rendu, « comment choisir une vis », prix relevés | material_library/visserie/, outils/planches/planche_visserie.py |
@@ -14,6 +15,7 @@ Méthode écrite (arêtes, matières, procédés, fixations, conception d'un bo�
 | essai/ | essai de la méthode sur un panneau gabarit (script, journal, chiffrage, aperçus) : [essai/summary.md](essai/summary.md) | `material_library/conception/` |
 
 ## Historique
+- 2026-11-01 : cartons.md.
 - 2026-11-01 : mousses.md.
 - 2026-10-27 : création (vide).
 - 2026-10-27 : aretes.md (chunk-02), matieres.md (chunk-03).

@@ -8,6 +8,7 @@ Les looks de fabrication (couches FDM, plateau texturé, ponçage, gravure laser
 Repris de MFS le 2026-10-27 : photoreal.py (nylon_pa12_noir, bumpon_noir, pvc_noir, alu_brosse_encre) et maquette_grand_format.py
 (peinture_acrylique, mat_uniforme, MATIERES_FACADE, MATIERES_CAISSON, pla_imprimeur, resine_9600_mate, GF_acrylique_fume) ; la
 visserie (inox, acier oxydé, laiton) vit dans visserie/shading.py (chunk-05), le catalogue y renvoie."""
+from . import carton as CA
 from . import mousse as MO
 from . import noeuds as N
 from .couleurs import hexa, srgb
@@ -202,6 +203,32 @@ CATALOGUE = {
                "échantillon à la règle ; profondeurs calibrées sur une vraie géométrie (outils/mousse/)", date="2026-11-01",
         decision="Lou (2026-11-01) : look de la méthode par étapes retenu après plusieurs essais de surface ; arête tranche / peau franche, "
                  "exception à « pas d'arête vive » ; teinte réglée sur rendu, pas encore comparée à un échantillon"),
+    # ---------------------------------------------------------------- cartons et papiers
+    "carton_e_kraft_ext": dict(
+        titre="Carton ondulé cannelure E, couverture kraft extérieure", famille="Cartons", fabrique=CA.matiere_carton,
+        procede="couverture kraft, flexographie 1 couleur si la fiche a un masque : methode/cartons.md",
+        matiere="SP_carton_E_kraft_ext", cible=None, base="#c49a5f", rugosite=0.80, bevel=None,
+        source="teinte : choisie par Lou sur rendu parmi trois essais (2026-11-01), plus saturée que son kraft du 2026-09-27 ; marbrure et lignes de cannelure "
+               "d'après les photos de la boîte Packhelp ; cannelure E : pas 3,2 à 3,5 mm", date="2026-11-01",
+        decision="Lou (2026-11-01) : teinte B retenue sur le rendu de la boîte F44 ; à comparer à un échantillon"),
+    "carton_e_kraft_int": dict(
+        titre="Carton ondulé cannelure E, couverture kraft intérieure", famille="Cartons", fabrique=CA.matiere_carton,
+        procede="couverture kraft non imprimée, plus mate", matiere="SP_carton_E_kraft_int", cible=None, base="#bb9460", rugosite=0.86, bevel=None,
+        graine=11.0, nuages=0.025, h_cannelure=0.010, source="teinte : accompagne la teinte extérieure choisie par Lou (2026-11-01), un peu plus sombre",
+        date="2026-11-01", decision="Lou (2026-11-01) : teinte B retenue sur le rendu de la boîte F44 ; à comparer à un échantillon"),
+    "carton_e_cannelure": dict(
+        titre="Carton ondulé : cannelure et tranche (papier recyclé)", famille="Cartons", fabrique=CA.matiere_tranche,
+        procede="papier de cannelure, tranche coupée à l'emporte-pièce", matiere="SP_carton_E_cannelure", cible=None, base="#a58c69", rugosite=0.9,
+        bevel=None, source="plus gris et plus clair que les couvertures sur les photos de coupe ; estimé, à contrôler sur un échantillon", date="2026-11-01",
+        decision="à valider par Lou sur les rendus de la boîte F44"),
+    "papier_offset_ivoire": dict(
+        titre="Papier non couché blanc cassé, imprimé", famille="Cartons", fabrique=CA.matiere_papier,
+        procede="offset ou numérique sur papier non couché", matiere="SP_papier_offset_ivoire", cible=None, base="#f4f1e8", rugosite=0.72, bevel=None,
+        source="teinte de la maquette du manuel d'équipage (Lou, 2026-11-01)", date="2026-11-01", decision="à valider par Lou"),
+    "carte_pelliculee_mate": dict(
+        titre="Carte 350 g pelliculée mate, imprimée", famille="Cartons", fabrique=CA.matiere_papier,
+        procede="numérique sur carte couchée, pelliculage mat", matiere="SP_carte_pelliculee_mate", cible=None, base="#f7f7f5", rugosite=0.38, voile=0.04,
+        grain=1.2, h_grain=0.002, bevel=None, source="estimé : pelliculage mat du commerce", date="2026-11-01", decision="à valider par Lou"),
     # ---------------------------------------------------------------- verres, caoutchoucs
     "acrylique_fume": dict(
         titre="Acrylique fumé foncé (≈ 22 % de transmission)", famille="Verres", fabrique=uniforme,

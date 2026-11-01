@@ -9,10 +9,12 @@ Matières physiques (chunk-03) et looks par procédé (chunk-04). Méthode : [me
 | couleurs.py | srgb / hexa, écart par canal, pipette (médiane hors reflets et ombres), correction et boucle de compensation d'une base | numpy ; bpy ou Pillow |
 | catalogue.py | Fiches des matières (cible, base compensée pour le studio du site, valeurs physiques, grain, Bevel, source, décision) et `construire(nom)` ; visserie → visserie/shading.py | noeuds, couleurs, aretes, visserie.shading |
 | mousse.py | Mousse PE à cellules fermées : matière (rayon vers la sphère de la bulle coupée, vrai déplacement), forme Geometry Nodes (arête franche, faces jamais planes, attributs), `poser(ob, m, voxel)`, `bloc` ; méthode : [methode/mousses.md](../../methode/mousses.md) | noeuds, couleurs ; Blender 4.4 ou 5.1 |
+| carton.py | Carton ondulé kraft (couverture, encre, plis, tranche) et papiers imprimés : méthode dans `methode/cartons.md` | bpy, noeuds, couleurs |
 | reglages_fdm.py | Réglages d'impression FDM sur l'objet (`ob.sp_fdm` : matière, buse, couche, parois, dessus, angle, couture, face sur le plateau, translucide, résolution), `imprimer()` / `recalculer()` (même chemin pour les scripts et le bouton), `trancher_objet()` (maillage → trajets, pour les maquettes), opérateur « Recalculer les trajets », panneau « Impression FDM » (vue 3D > Material library) ; fichiers dans `<.blend>_fdm\` ; objets liés refusés | procedes, catalogue, impression/tranchage.py (Python système) |
 | procedes.py | Looks par procédé : fdm (couches, plateau texturé, buse 0,4 / 0,2), couches (matières existantes), **trajets** (vrais trajets de la buse simulés : cordons des dessus / face plateau / tranches, coutures, reflet le long du fil — feature fdm-trajets), lettres_imprimees / lettres_gravees (masques .npz), sla (finitions), mjf, acrylique_laser (jour / nuit), metal | catalogue, noeuds, aretes ; .npz de impression/ |
 
 ## Historique
+- 2026-11-01 : carton.py et fiches carton / papier (version 0.3.3).
 - 2026-11-01 : mousse.py et fiche `mousse_pe_ld33` (repris du projet F-COM, calage mousse ; version 0.3.2).
 - 2026-10-27 : création (chunk-01).
 - 2026-10-27 : noeuds.py, couleurs.py, catalogue.py (chunk-03, repris de photoreal.py, maquette_grand_format.py, carte_pipette.py de MFS).

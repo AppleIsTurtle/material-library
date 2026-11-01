@@ -25,6 +25,7 @@ assert SP.__version__.startswith("0.3."), SP.__version__     # version attendue 
 | `matieres.catalogue` (`CAT`) | les matières physiques, une fiche par matière (teinte, rugosité, grain, rayon de Bevel, source, décision) | `CAT.noms(famille=None)`, `CAT.fiche(nom)`, `CAT.construire(nom, **changes)` → `bpy.types.Material` (nom Blender `SP_…`, relançable sans doublon) |
 | `matieres.procedes` (`PR`) | le look de la vraie fabrication par-dessus la matière | `PR.poser(ob, m)` ; `PR.fdm("pla_noir", buse=0.4, axe="Z", plateau="-Z")`, `PR.sla("sla_jlc_black", "poncee_huilee")`, `PR.mjf("nylon_pa12_noir")`, `PR.acrylique_laser("peinture_fs36118", masque=None)`, `PR.metal("alu_anodise_gris_fonce")` |
 | `matieres.mousse` (`MO`) | mousse PE à cellules fermées, sans motif répété : [methode/mousses.md](methode/mousses.md) | `MO.poser(ob, CAT.construire("mousse_pe_ld33"), voxel=0.4)` |
+| `matieres.carton` | carton ondulé kraft et papiers imprimés, sur UV en mm : [methode/cartons.md](methode/cartons.md) | `CAT.construire("carton_e_kraft_ext", masque=png, masque_cadre=(x, y, l, h))` |
 | `matieres.reglages_fdm` | vrais trajets de la buse sur une pièce FDM (Python système requis) | `imprimer(ob, matiere="pla_noir", buse=0.4, plateau="-Z")` |
 | `matieres.couleurs` | conversions, pipette, base compensée pour un studio | `srgb(hexa)`, `hexa(lin)`, `ecart(h1, h2)`, `compenser(base, cible, rendre_et_mesurer)` |
 | `aretes` (`AR`) | aucune arête vive : géométrie et rendu | `AR.plaque(w, h, r, y0, y1, (av, ar))` → bmesh, `AR.coupe(...)`, `AR.retrancher(cible, outils)`, `AR.lisser(ob)`, `AR.adoucir(ob, largeur)`, `AR.bevel_rendu(m, rayon)`, `AR.aretes_douces(mats)`, `AR.aretes_vives(ob)` (contrôle), `AR.RAYONS` |
@@ -35,7 +36,7 @@ assert SP.__version__.startswith("0.3."), SP.__version__     # version attendue 
 
 Matières du catalogue (0.3) : `peinture_fs36118`, `sla_jlc_black`, `sla_jlc_grey`, `resine_9600_blanche`, `pla_noir`, `pla_blanc`,
 `pla_naturel`, `nylon_pa12_noir`, `nylon_pa12s_noir`, `sls_3201pa_f`, `inox_a2`, `acier_oxyde_noir`, `laiton`,
-`alu_anodise_gris_fonce`, `alu_brosse`, `mousse_pe_ld33`, `acrylique_fume`, `bumpon_noir`, `pvc_noir` (liste à jour : `CAT.noms()`).
+`alu_anodise_gris_fonce`, `alu_brosse`, `mousse_pe_ld33`, `carton_e_kraft_ext`, `carton_e_kraft_int`, `carton_e_cannelure`, `papier_offset_ivoire`, `carte_pelliculee_mate`, `acrylique_fume`, `bumpon_noir`, `pvc_noir` (liste à jour : `CAT.noms()`).
 
 Repère des fonctions : **mm**, x à droite, z en haut, y en profondeur (0 = face avant, -y vers l'utilisateur ; la tête d'une vis
 est du côté -y).
