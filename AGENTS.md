@@ -13,7 +13,7 @@ une matière, une vis ou une règle, elle s'ajoute ici).
 
 ```python
 import os, sys
-sys.path.insert(0, os.environ.get("MATERIAL_LIBRARY", r"D:\Claude\material-library"))
+sys.path.insert(0, os.environ.get("MATERIAL_LIBRARY", r"G:\Projets\material-library\Claude"))
 import material_library as SP
 assert SP.__version__.startswith("0.3."), SP.__version__     # version attendue par le projet, notée dans son VERSIONS.md
 ```
@@ -24,6 +24,7 @@ assert SP.__version__.startswith("0.3."), SP.__version__     # version attendue 
 |---|---|---|
 | `matieres.catalogue` (`CAT`) | les matières physiques, une fiche par matière (teinte, rugosité, grain, rayon de Bevel, source, décision) | `CAT.noms(famille=None)`, `CAT.fiche(nom)`, `CAT.construire(nom, **changes)` → `bpy.types.Material` (nom Blender `SP_…`, relançable sans doublon) |
 | `matieres.procedes` (`PR`) | le look de la vraie fabrication par-dessus la matière | `PR.poser(ob, m)` ; `PR.fdm("pla_noir", buse=0.4, axe="Z", plateau="-Z")`, `PR.sla("sla_jlc_black", "poncee_huilee")`, `PR.mjf("nylon_pa12_noir")`, `PR.acrylique_laser("peinture_fs36118", masque=None)`, `PR.metal("alu_anodise_gris_fonce")` |
+| `matieres.mousse` (`MO`) | mousse PE à cellules fermées, sans motif répété : [methode/mousses.md](methode/mousses.md) | `MO.poser(ob, CAT.construire("mousse_pe_ld33"), voxel=0.4)` |
 | `matieres.reglages_fdm` | vrais trajets de la buse sur une pièce FDM (Python système requis) | `imprimer(ob, matiere="pla_noir", buse=0.4, plateau="-Z")` |
 | `matieres.couleurs` | conversions, pipette, base compensée pour un studio | `srgb(hexa)`, `hexa(lin)`, `ecart(h1, h2)`, `compenser(base, cible, rendre_et_mesurer)` |
 | `aretes` (`AR`) | aucune arête vive : géométrie et rendu | `AR.plaque(w, h, r, y0, y1, (av, ar))` → bmesh, `AR.coupe(...)`, `AR.retrancher(cible, outils)`, `AR.lisser(ob)`, `AR.adoucir(ob, largeur)`, `AR.bevel_rendu(m, rayon)`, `AR.aretes_douces(mats)`, `AR.aretes_vives(ob)` (contrôle), `AR.RAYONS` |
@@ -34,7 +35,7 @@ assert SP.__version__.startswith("0.3."), SP.__version__     # version attendue 
 
 Matières du catalogue (0.3) : `peinture_fs36118`, `sla_jlc_black`, `sla_jlc_grey`, `resine_9600_blanche`, `pla_noir`, `pla_blanc`,
 `pla_naturel`, `nylon_pa12_noir`, `nylon_pa12s_noir`, `sls_3201pa_f`, `inox_a2`, `acier_oxyde_noir`, `laiton`,
-`alu_anodise_gris_fonce`, `alu_brosse`, `acrylique_fume`, `bumpon_noir`, `pvc_noir` (liste à jour : `CAT.noms()`).
+`alu_anodise_gris_fonce`, `alu_brosse`, `mousse_pe_ld33`, `acrylique_fume`, `bumpon_noir`, `pvc_noir` (liste à jour : `CAT.noms()`).
 
 Repère des fonctions : **mm**, x à droite, z en haut, y en profondeur (0 = face avant, -y vers l'utilisateur ; la tête d'une vis
 est du côté -y).
@@ -49,7 +50,7 @@ import os, sys
 import bmesh, bpy
 from mathutils import Vector
 
-sys.path.insert(0, os.environ.get("MATERIAL_LIBRARY", r"D:\Claude\material-library"))
+sys.path.insert(0, os.environ.get("MATERIAL_LIBRARY", r"G:\Projets\material-library\Claude"))
 import material_library as SP
 from material_library import aretes as AR
 from material_library.conception import controles as CT
@@ -105,7 +106,7 @@ if "apercu" in sys.argv:                                 # aperçu rapide : sol 
     sc.render.filepath = os.path.join(ICI, "piece_apercu.png"); bpy.ops.render.render(write_still=True)
 ```
 
-Lancer : `blender -b --factory-startup --python piece.py` (chez Lou : `F:\Blender\5.1\blender.exe`), avec `-- apercu` à la fin
+Lancer : `blender -b --factory-startup --python piece.py` (chez Lou : `F:\Software\Blender\5.1\blender.exe`), avec `-- apercu` à la fin
 pour l'image. Sortie attendue : `arêtes vives : 0`, `CONTROLE COLLISIONS : 0 collision(s) à corriger…` puis
 `OK 0.3.1 plaque SP_PLA_noir_FDM… ['SP_VIS', 'SP_VIS_filet', 'SP_VIS_ame']`. Regarder l'aperçu soi-même avant de le montrer.
 
@@ -129,16 +130,16 @@ pour l'image. Sortie attendue : `arêtes vives : 0`, `CONTROLE COLLISIONS : 0 co
 - **Trajets FDM, tranchage, lettres** : lancent le Python système (numpy, scipy, shapely, Pillow : `SP.PYTHON_SYSTEME`) ; celui de
   Blender n'a ni scipy ni shapely.
 - **Mémoire** : un rendu Cycles lourd ou un booléen sur des copies presque confondues peut saturer le PC ; chez Lou, lancer
-  Blender par le garde-fou `D:\Claude\MFS\outils\blender_garde.ps1 -ArgLine '…' -Log <fichier>`.
+  Blender par le garde-fou `G:\Projets\SimLogix\Claude\MFS\outils\blender_garde.ps1 -ArgLine '…' -Log <fichier>`.
 
 ### Chemins de la machine et données hors git
 
 | Quoi | Défaut (PC de Lou) | Ailleurs |
 |---|---|---|
-| le dépôt | `D:\Claude\material-library` | variable `MATERIAL_LIBRARY` lue par vos scripts (convention de l'exemple ci-dessus) |
-| données lourdes (`SP.DONNEES`) : cartes d'imperfections, planches, caches FDM | `G:\Blender\Bibliotheque` | variable `MATERIAL_LIBRARY_DONNEES` |
+| le dépôt | `G:\Projets\material-library\Claude` | variable `MATERIAL_LIBRARY` lue par vos scripts (convention de l'exemple ci-dessus) |
+| données lourdes (`SP.DONNEES`) : cartes d'imperfections, planches, caches FDM | `G:\Library\Blender\Bibliotheque` | variable `MATERIAL_LIBRARY_DONNEES` |
 | Python système (`SP.PYTHON_SYSTEME`) | `python` du PATH | variable `MATERIAL_LIBRARY_PYTHON` |
-| Blender | `F:\Blender\5.1\blender.exe` (4.4 : `F:\Blender\blender.exe`) | celui de la machine |
+| Blender | `F:\Software\Blender\5.1\blender.exe` (4.4 : `F:\Software\Blender\4.4\blender.exe`) | celui de la machine |
 
 **Cartes d'imperfections** (`<DONNEES>\imperfections\` : `fond`, `frottements`, `doigts`, `micro_rayures`, `rayures`,
 `poussiere`, `salissure`, PNG 8 bits 2K, 22 Mo) : tirées de packs de textures du commerce (Megascans, ATOM…), elles ne sont

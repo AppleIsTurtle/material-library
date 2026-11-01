@@ -6,6 +6,7 @@ VERSION 1
 bfbb7361-e435-5610-9f36-30b325fcad43:Caoutchoucs:Caoutchoucs
 cfbfb36b-59fc-56f7-b653-a6489f1634f5:Impression FDM:Impression FDM
 079e3dbd-18da-5a4e-ab8f-e8e1a4beb7af:Impression FDM/Couches:Impression FDM-Couches
+e5f4e154-fa40-5c09-b5e8-c87cc0a8a230:Mousses:Mousses
 822c9fa7-73f4-5ac7-8e6d-f21452e2a676:Métaux:Métaux
 bf3e11ce-18d7-50d0-b6d5-d7c989939e94:Nylon:Nylon
 83e06ec6-225a-5dcc-8092-a5f3c764d33b:Peintures:Peintures

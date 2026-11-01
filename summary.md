@@ -13,14 +13,15 @@ imperfections, méthode de conception d'un boîtier. Plan : [docs/plans/MASTER.m
 | outils/ | Outils du dépôt, dont la non-régression des assets ([summary](outils/summary.md)) | Blender 5.1, Python |
 | blender/ | Construction du `.blend` « bibliothèque de matières » (chunk-06) ([summary](blender/summary.md)) | material_library |
 | bibliotheque/ | La bibliothèque de matières générée, à déclarer dans Blender : `blender_4.4/` et `blender_5.1/` ([summary](bibliotheque/summary.md)) | blender/construire_bibliotheque.py |
-| methode/ | Méthode écrite : arêtes, matières, procédés, fixations, conception d'un boîtier ([summary](methode/summary.md)) | — |
+| methode/ | Méthode écrite : arêtes, matières, mousses, procédés, fixations, conception d'un boîtier ([summary](methode/summary.md)) | — |
 | skill/ | Source du skill Claude global « material-library » (chunk-08), installé par jonction dans `~/.claude/skills/` ([summary](skill/summary.md)) | — |
 | docs/plans/ | MASTER.md (plan) et chunks 01 à 09 ([summary](docs/plans/summary.md)) | — |
 
-Données lourdes hors git : `G:\Blender\Bibliotheque\` (cartes d'images, planches, archives). Dépôt GitHub public :
+Données lourdes hors git : `G:\Library\Blender\Bibliotheque\` (cartes d'images, planches, archives). Dépôt GitHub public :
 https://github.com/AppleIsTurtle/material-library.
 
 ## Historique
+- 2026-11-01 : mousse PE à cellules fermées : matière, forme, méthode, outils de calibrage (version 0.3.2).
 - 2026-10-27 : création (chunk-01) : squelette, règles, non-régression, import depuis MFS (`MFS/outils/bibliotheque_commune.py`).
 - 2026-10-28 : dépôt public (version 0.3.1) ; l'imprimeur FDM n'est plus nommé ; l'historique de travail d'avant reste privé.
 - 2026-10-28 : AGENTS.md et skill « material-library » (chunk-08), chemins réglables par variables d'environnement.

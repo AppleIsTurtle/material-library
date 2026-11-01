@@ -25,7 +25,7 @@ if ARGV[:1] == ["ouvrir"]:
     import numpy as np
     cats = {l.split(":")[0] for l in open(os.path.join(DOSSIER, "blender_assets.cats.txt"), encoding="utf-8")
             if l.count(":") >= 2 and not l.startswith("#")}
-    ids = [i for i in list(bpy.data.materials) + list(bpy.data.collections) if i.asset_data]
+    ids = [i for i in list(bpy.data.materials) + list(bpy.data.collections) + list(bpy.data.node_groups) if i.asset_data]
     erreurs = []
     for i in ids:
         p = i.preview; w, h = p.image_size if p else (0, 0)

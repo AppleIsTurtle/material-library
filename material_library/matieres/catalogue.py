@@ -8,6 +8,7 @@ Les looks de fabrication (couches FDM, plateau texturé, ponçage, gravure laser
 Repris de MFS le 2026-10-27 : photoreal.py (nylon_pa12_noir, bumpon_noir, pvc_noir, alu_brosse_encre) et maquette_grand_format.py
 (peinture_acrylique, mat_uniforme, MATIERES_FACADE, MATIERES_CAISSON, pla_imprimeur, resine_9600_mate, GF_acrylique_fume) ; la
 visserie (inox, acier oxydé, laiton) vit dans visserie/shading.py (chunk-05), le catalogue y renvoie."""
+from . import mousse as MO
 from . import noeuds as N
 from .couleurs import hexa, srgb
 
@@ -191,6 +192,16 @@ CATALOGUE = {
         cible=None, base=hexa((0.913, 0.922, 0.924)), rugosite=0.3, metal=1.0, bevel=None,
         source="photoreal.alu_brosse_encre (F0 alu 0,913, PET IOR 1,64)", date="2026-10-16",
         decision="Lou : matériau physiquement précis (couches réelles de l'étiquette)"),
+    # ---------------------------------------------------------------- mousses
+    "mousse_pe_ld33": dict(
+        titre="Mousse PE réticulée noire LD33 (cellules fermées, 0,4 mm)", famille="Mousses", fabrique=MO.matiere_mousse,
+        procede="plaque expansée à l'azote, dessus tranché à la scie à ruban, flancs découpés au jet d'eau : methode/mousses.md",
+        matiere="SP_mousse_PE_LD33", cible=None, base="#2e3034", rugosite=0.62, rugosite_dessus=0.40, bevel=None,
+        source="cellules 0,4 mm d'après la fiche LD33 de Zotefoams (lue en extrait), 0,37 mm chez un revendeur ; Sa du dessus dans la "
+               "plage publiée pour une mousse tranchée (20-75 µm, brevet US 11753513) ; aucune photo à échelle connue, à contrôler sur un "
+               "échantillon à la règle ; profondeurs calibrées sur une vraie géométrie (outils/mousse/)", date="2026-11-01",
+        decision="Lou (2026-11-01) : look de la méthode par étapes retenu après plusieurs essais de surface ; arête tranche / peau franche, "
+                 "exception à « pas d'arête vive » ; teinte réglée sur rendu, pas encore comparée à un échantillon"),
     # ---------------------------------------------------------------- verres, caoutchoucs
     "acrylique_fume": dict(
         titre="Acrylique fumé foncé (≈ 22 % de transmission)", famille="Verres", fabrique=uniforme,

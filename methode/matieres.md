@@ -32,7 +32,7 @@ Les matières de la visserie (inox A2, acier oxydé noir, laiton) sont construit
 ## Ajouter une matière
 1. **Photo réelle d'abord** (pièce reçue, échantillon, fiche du fabricant) et mesures (réflectance, transmission, rugosité Ra, taille
    du grain) ; demander à Lou la teinte qu'elle voit.
-2. Choisir la construction : `uniforme` (la plupart), `peinture_grain_net`, `caoutchouc`, `alu_brosse`, ou une nouvelle fonction
+2. Choisir la construction : `uniforme` (la plupart), `peinture_grain_net`, `caoutchouc`, `alu_brosse`, `mousse.matiere_mousse` ([mousses.md](mousses.md)), ou une nouvelle fonction
    si la matière a des couches (comme l'étiquette alu + encre + pelliculage).
 3. Écrire la fiche (source, date) ; la construire seule : `CAT.construire(nom)`.
 4. **Pipette** si la fiche a une cible : `planche_matieres.py … seul=<nom>` rend une pastille de face dans le studio, mesure la
@@ -55,13 +55,13 @@ fiche. Une nouvelle compensation se lance avec `planche_matieres.py … seul=<no
 `bibliotheque\blender_<X.Y>\bibliotheque_matieres.blend` dans le dépôt (+ `blender_assets.cats.txt` à côté), **un fichier par
 version de Blender** (`blender_4.4\`, `blender_5.1\` : Blender 4.4 n'ouvre pas un .blend de la 5.x) : une matière par fiche, les variantes
 FDM de l'imprimeur FDM (buses 0,4 / 0,2, PLA naturel translucide) et 7 pièces de visserie toutes faites, avec aperçu, description (fiche :
-procédé, base, source, décision) et catalogues (Peintures, Résines, Impression FDM, Nylon, Métaux, Verres, Caoutchoucs, Visserie).
+procédé, base, source, décision) et catalogues (Peintures, Résines, Impression FDM, Nylon, Métaux, Mousses, Verres, Caoutchoucs, Visserie).
 Le fichier est **généré** par [`blender/construire_bibliotheque.py`](../blender/construire_bibliotheque.py) : ne pas le retoucher à
 la main (une retouche va dans la fiche du catalogue, puis on régénère **avec les deux Blender** ; l'ancien est archivé dans
-`G:\Blender\Bibliotheque\_archives\`).
+`G:\Library\Blender\Bibliotheque\_archives\`).
 
 **La déclarer (une fois par Blender)** : *Edit › Preferences › File Paths › Asset Libraries* → **+** → choisir le dossier de **sa**
-version (`D:\Claude\material-library\bibliotheque\blender_4.4\` ou `…\blender_5.1\`) → nommer « material-library » ; *Import Method* :
+version (`G:\Projets\material-library\Claude\bibliotheque\blender_4.4\` ou `…\blender_5.1\`) → nommer « material-library » ; *Import Method* :
 **Append (Reuse Data)** en 4.4, **Append** en 5.1 (la 5.x ne propose plus *Reuse Data*). Puis, dans un éditeur *Asset Browser*,
 choisir la bibliothèque « material-library » en haut à gauche. Fait chez Lou le 2026-10-28 dans les deux Blender (préférences
 sauvegardées avant : `userpref_avant_material_library_2026-10-28.blend`).

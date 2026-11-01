@@ -1,15 +1,16 @@
 r"""Construit bibliotheque\blender_<X.Y>\bibliotheque_matieres.blend (chunk-06) : la bibliothèque d'assets de Lou pour l'Asset Browser,
 un fichier par version de Blender (celle qui lance le script ; 4.4 n'ouvre pas un .blend de la 5.x).
     blender -b --factory-startup --python blender\construire_bibliotheque.py -- [quick]
-    (lancer via D:\Claude\MFS\outils\blender_garde.ps1 ; pour la 4.4 : F:\Blender\blender.exe)
+    (lancer via G:\Projets\SimLogix\Claude\MFS\outils\blender_garde.ps1 ; pour la 4.4 : F:\Software\Blender\4.4\blender.exe)
 Contenu, tout marqué comme asset, rangé dans des catalogues (blender_assets.cats.txt à côté du .blend, uuid stables) :
   - une matière par fiche du catalogue (material_library.matieres.catalogue), description = fiche (procédé, source, décision) ;
   - les variantes de procédé utiles à la main (FDM de l'imprimeur FDM en buses 0,4 / 0,2, PLA naturel translucide) ;
   - quelques pièces de visserie toutes faites (une collection par pièce : tête + tige) ;
+  - la forme des mousses (groupe Geometry Nodes, à glisser sur un objet comme modificateur) ;
 aperçu rendu pour chaque asset (boule ou pièce, Cycles), images packées. Unités : 1 unité = 1 mm (échelle 0,001), comme les
 scènes de MFS — les grains et les couches sont en mm.
 Le fichier est GÉNÉRÉ : jamais retouché à la main (les retouches vont dans le catalogue) ; l'ancien est archivé dans
-G:\Blender\Bibliotheque\_archives\ (hors git) avant chaque régénération. Déclaration dans Blender : methode/matieres.md § Bibliothèque dans Blender."""
+G:\Library\Blender\Bibliotheque\_archives\ (hors git) avant chaque régénération. Déclaration dans Blender : methode/matieres.md § Bibliothèque dans Blender."""
 import datetime
 import math
 import os
@@ -28,6 +29,7 @@ import material_library as SP                                   # noqa: E402
 from material_library import aretes as AR                       # noqa: E402
 from material_library.imperfections import uv_mm                # noqa: E402
 from material_library.matieres import catalogue as CAT          # noqa: E402
+from material_library.matieres import mousse as MO               # noqa: E402
 from material_library.matieres import procedes as PR            # noqa: E402
 from material_library.visserie import pieces as PC              # noqa: E402
 
@@ -138,7 +140,15 @@ for nom, f in CAT.CATALOGUE.items():
     desc = f"{f['titre']}. Procédé : {f['procede']}. Base {f['base']} (studio du site)" + (f", cible {f['cible']}" if f["cible"] else "")
     desc += f". Bevel {f['bevel']} mm. Source : {f['source']} ({f['date']})." + (f" Décision : {f['decision']}." if f["decision"] else "")
     desc += " Unités : mm (échelle 0,001)."
-    marquer(m, f["famille"], desc, (f["famille"], nom), cats); assets.append((m, [BOULE]))
+    marquer(m, f["famille"], desc, (f["famille"], nom), cats)
+    if f["famille"] == "Mousses":                              # relief en vrai déplacement : un bloc coupé au lieu de la boule
+        bloc = MO.bloc("_bloc_mousse", m, col=STUDIO); assets.append((m, [bloc]))
+        forme = bloc.modifiers["forme"].node_group; forme.name = "SP_mousse_forme"
+        marquer(forme, "Mousses", "Forme d'une pièce en mousse (mousse_pe_ld33) : arête franche, faces jamais planes, attributs lus par la matière. "
+                "Glisser sur un maillage fermé, puis ajouter une subdivision adaptative (Simple) pour le vrai déplacement : methode/mousses.md. Unités : mm.",
+                ("Mousses", "Geometry Nodes"), cats); assets.append((forme, [bloc]))
+    else:
+        assets.append((m, [BOULE]))
 for nom, catal, desc, fab in VARIANTES:
     m = fab(); m.name = nom
     marquer(m, catal, desc + ". Unités : mm (échelle 0,001).", ("FDM", "procédé"), cats); assets.append((m, [BOULE]))
@@ -153,7 +163,7 @@ for k, des in enumerate(VISSERIE):
 
 # ------------------------------------------------------------------ aperçus, puis on retire le studio
 for id_, objets in assets:
-    if isinstance(id_, bpy.types.Material):
+    if isinstance(id_, bpy.types.Material) and objets == [BOULE]:
         BOULE.data.materials.clear(); BOULE.data.materials.append(id_)
     apercu(id_, objets)
     print("ASSET", type(id_).__name__, id_.name, flush=True)
@@ -173,5 +183,5 @@ if os.path.exists(FICHIER):
     shutil.move(FICHIER, dst); print("ARCHIVE", dst, flush=True)
 bpy.ops.wm.save_as_mainfile(filepath=FICHIER, compress=True, check_existing=False)
 ecrire_catalogues(DOSSIER, cats)
-nm = sum(1 for i, _ in assets if isinstance(i, bpy.types.Material)); nc = len(assets) - nm
-print(f"FINI {FICHIER} : {nm} matières, {nc} pièces de visserie, {len(cats)} catalogues", flush=True)
+nm = sum(1 for i, _ in assets if isinstance(i, bpy.types.Material)); nc = sum(1 for i, _ in assets if isinstance(i, bpy.types.Collection))
+print(f"FINI {FICHIER} : {nm} matières, {nc} pièces de visserie, {len(assets) - nm - nc} groupe(s) de forme, {len(cats)} catalogues", flush=True)

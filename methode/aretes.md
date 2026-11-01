@@ -52,6 +52,7 @@ les mêmes ordres de grandeur (0,4 à 0,6 sur les découpes visibles d'une faça
 - Frontières **internes** entre matières d'une pièce multi-matière (lettres à fleur dans la façade, flèche du bouton TFR) : elles
   ne se voient pas une fois imprimées ; et le nœud Bevel y dessinerait un liseré sombre → ces matières vont dans `sauf=`.
 - Surfaces planes d'affichage (écran, étiquette) : pas de Bevel.
+- Mousse découpée : l'arête entre tranche et peau reste franche (Lou, 2026-10-31), le bord déchiqueté des cellules l'adoucit ([mousses.md](mousses.md)).
 
 ## Vérifier
 - **Par mesure**, pas seulement à l'œil : `aretes_vives(ob, 45)` liste les arêtes du maillage évalué de plus de 45° (le dos des

@@ -1,6 +1,6 @@
 # summary — bibliotheque/
 
-La bibliothèque de matières **générée**, à déclarer dans Blender comme *Asset Library* : 22 matières, 7 pièces de visserie, aperçus et
+La bibliothèque de matières **générée**, à déclarer dans Blender comme *Asset Library* : 23 matières, 7 pièces de visserie, la forme des mousses (`SP_mousse_forme`), aperçus et
 catalogues. Suivie par git (exception à « données lourdes hors git », Lou, 2026-10-28) pour qu'un clone du dépôt suffise à l'installer.
 Un dossier par version de Blender, car Blender 4.4 n'ouvre pas un `.blend` enregistré par la 5.x. Ne jamais retoucher à la main :
 régénérer avec [blender/construire_bibliotheque.py](../blender/construire_bibliotheque.py), lancé par **chacun** des deux Blender.
@@ -14,5 +14,6 @@ Installation : [README.md](../README.md) ; détails : [methode/matieres.md](../m
 | blender_5.1/blender_assets.cats.txt | Catalogues de l'Asset Browser (uuid stables) | idem |
 
 ## Historique
+- 2026-11-01 : mousse PE ajoutée, les deux fichiers régénérés (version 0.3.2).
 - 2026-10-28 : création ; les deux fichiers générés en qualité finale (version 0.2.4), déclarés dans les deux Blender de Lou ; l'ancien
-  `G:\Blender\Bibliotheque\bibliotheque_matieres.blend` archivé dans `G:\Blender\Bibliotheque\_archives\`.
+  `G:\Library\Blender\Bibliotheque\bibliotheque_matieres.blend` archivé dans `G:\Library\Blender\Bibliotheque\_archives\`.
