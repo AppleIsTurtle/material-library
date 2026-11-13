@@ -62,25 +62,59 @@ def _souder_lisser(ob, souder=True):
 
 
 def piece_fdm(ob, matiere="pla_noir", plateau="-Z", grain="lisse", buse=0.4, res=None, translucide=0.0, trajets=True,
-              arrondi=None, dossier=None, souder=True, **reglages):
+              arrondi=None, dossier=None, souder=True, res_premier_lit=None, **reglages):
     """Pièce FDM comme imprimée : `plateau` = face posée sur le plateau dans le repère de l'objet (« -Y » : face avant) ; `grain`
     du plateau (procedes.GRAINS ; « lisse » par défaut : plateau lisse de l'imprimeur FDM) ; trajets=False pour une pièce d'une ou
     deux couches posée sur une autre (lettres, cœurs à fleur) : matière FDM seule ; res : côté des cartes des trajets (défaut :
-    automatique ; 4096 garde une grande façade sous 12 Go) ; arrondi : rayon du nœud Bevel (défaut RAYONS["pla"] ; 0 : aucun,
+    automatique ; 4096 garde une grande façade sous 12 Go) ; res_premier_lit : les faces posées sur le plateau deviennent un objet
+    à part (même repère, mêmes trajets) avec leurs propres cartes de ce côté — sur une grande pièce, une carte commune ne résout pas
+    les sillons nets du premier lit (≈ 0,1 mm) : ils disparaissent de la face (2026-11-13) ; arrondi : rayon du nœud Bevel (défaut RAYONS["pla"] ; 0 : aucun,
     pour une matière à fleur d'une autre, où il dessinerait un liseré) ; reglages : réglages du tranchage (motif_dessus=…).
     Renvoie la matière posée."""
     _souder_lisser(ob, souder)
     m = PR.fdm(matiere, buse=buse, axe=plateau[-1].upper(), plateau=plateau, translucide=translucide,
                nom=f"{matiere}_FDM_{ob.name}", grain=grain)
     PR.poser(ob, m)
+    pieces = [(ob, res)]
     if trajets:
         dossier = dossier or os.path.join(DONNEES, "fdm", "rendu")
-        npz = SRF.trancher_objet(ob, dossier, buse, plateau, **reglages)
-        m = PR.trajets(ob, npz, res=res, copie=False, dossier=dossier)
-        print("RENDU.trajets", ob.name, flush=True)
+        npz = SRF.trancher_objet(ob, dossier, buse, plateau, **reglages)       # tranchage de la pièce entière
+        if res_premier_lit:
+            lit = _separer_premier_lit(ob, plateau)
+            if lit: lit.data.materials[0] = PR.fdm(matiere, buse=buse, axe=plateau[-1].upper(), plateau=plateau,
+                                                   translucide=translucide, nom=f"{matiere}_FDM_{lit.name}", grain=grain)
+            if lit: pieces.append((lit, res_premier_lit))
+        for o, r_ in pieces:
+            PR.trajets(o, npz, res=r_, copie=False, dossier=dossier)
+            print("RENDU.trajets", o.name, r_, flush=True)
     r = AR.RAYONS["pla"] if arrondi is None else arrondi
-    if r: AR.bevel_rendu(ob.active_material, r)
+    for o, _ in pieces:
+        if r: AR.bevel_rendu(o.active_material, r)
     return ob.active_material
+
+
+def _separer_premier_lit(ob, plateau, epaisseur=0.02):
+    """Sépare les faces de `ob` posées sur le plateau (tous leurs sommets à moins de `epaisseur` mm du plan du plateau ; par la
+    position seule : les lamelles laissées par les booléens ont des normales faussées, gardées à part elles ressortaient en
+    tirets brillants sur la face, 2026-11-13) dans un
+    objet `<nom>_premier_lit` de même repère, même parent et mêmes modificateurs ; `ob` garde le reste. Renvoie l'objet, ou None."""
+    i = "XYZ".index(plateau[-1].upper()); s = -1.0 if plateau.startswith("-") else 1.0
+    bm = bmesh.new(); bm.from_mesh(ob.data); bm.faces.ensure_lookup_table()
+    bord = max(v.co[i] for v in bm.verts) if s > 0 else min(v.co[i] for v in bm.verts)   # plan du plateau
+    def au_plateau(f):
+        return all(abs(v.co[i] - bord) < epaisseur for v in f.verts)
+    sel = [f for f in bm.faces if au_plateau(f)]
+    if not sel: bm.free(); return None
+    me_lit = ob.data.copy(); lit = ob.copy(); lit.data = me_lit; lit.name = ob.name + "_premier_lit"
+    lit["uv_plan"] = plateau[-1].upper()          # face plane : UV projetés à plat (un îlot), pas de couture dans ses cartes
+    for m_ in list(lit.modifiers): lit.modifiers.remove(m_)   # plane : ombrée à plat (les lamelles des booléens, lissées, faisaient
+    me_lit.shade_flat()                                        # de petits triangles clairs ; le Bevel arrondit toujours ses bords)
+    for c in ob.users_collection: c.objects.link(lit)
+    garde = {f.index for f in sel}                                             # indices avant toute suppression
+    b2 = bm.copy(); bmesh.ops.delete(bm, geom=sel, context="FACES"); bm.to_mesh(ob.data); bm.free()
+    b2.faces.ensure_lookup_table()
+    bmesh.ops.delete(b2, geom=[f for f in b2.faces if f.index not in garde], context="FACES"); b2.to_mesh(me_lit); b2.free()
+    return lit
 
 
 def piece(ob, matiere, arrondi, souder=True):

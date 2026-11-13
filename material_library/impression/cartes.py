@@ -5,7 +5,7 @@ masque des texels utiles. trajets.npz : sortie de tranchage.py (repère d'impres
 Sortie : `hauteur` (mm, ≤ 0 : creux entre cordons, sur les dessus, les dessous et aux coutures) et `fil` (direction du fil, repère
 de l'objet, pour l'anisotropie du reflet), de la taille de la cuisson. Les couches des tranches ne sont PAS dans la carte : le
 shader les calcule (nettes à toute résolution) ; la carte n'y ajoute que les coutures.
-Profil d'un cordon : demi-ellipse (largeur réelle du trajet, hauteur de la couche), cordons voisins qui se recouvrent (le creux
+Profil d'un cordon : super-ellipse d'exposant PROFIL, plate au milieu (largeur réelle du trajet, hauteur de la couche), cordons voisins qui se recouvrent (le creux
 entre deux cordons vient de leur pas d'écrasement) ; relief réduit sur les dessus (la buse lisse le haut du cordon) et sur la
 face du plateau (cordon écrasé sur le PEI)."""
 import sys
@@ -19,6 +19,10 @@ TYPES = ["Outer wall", "Inner wall", "Overhang wall", "Top surface", "Bottom sur
          "Bridge", "Internal Bridge", "Gap infill", "Skirt", "Brim", "Support", "Custom", "Ironing"]
 RELIEF = dict(dessus=0.16, plateau=0.035, dessous=0.30)   # creux entre cordons, en part de la hauteur de couche
 COUTURE = 0.18                                            # bourrelet de couture, en part de la hauteur de couche
+VIDE = 1.25              # au-delà de 1,25 demi-largeur du cordon le plus proche : matière écrasée / remplissage, à plat (sinon des
+                         # tranchées à fond plat, bords raides → tirets brillants sur la face, 2026-11-13)
+PROFIL = 4.0             # profil d'un cordon : super-ellipse (1 − |x|^n)^(1/n) ; 2 = demi-ellipse (avant le 2026-11-13, trop bombée :
+                         # Lou, « lignes trop arrondies, pas assez plates et sharp ») ; 4 : dessus plat, sillon étroit et franc
 NORMALE = 0.70                                            # |n.z| au-delà : face de dessus / dessous ; en deçà : tranche
 
 
@@ -77,9 +81,12 @@ def cartes(P, N, masque, t):
                         mieux = r_[0] < best[1]
                         best = tuple(np.where(mieux, a, b) for a, b in zip((i_, *r_), best))
             idx, d, ux, uy = best
-            x = d / (0.5 * t["largeur"][idx] * (1 + var[idx]))
-            prof = np.sqrt(np.clip(1 - x * x, 0, 1))                                 # 1 au milieu du cordon, 0 au bord
-            rel = RELIEF["plateau"] if (nom == "dessous" and kk == 0) else RELIEF[nom]
+            plateau = nom == "dessous" and kk == 0           # premier lit : écrasé régulièrement sur le plateau, largeur constante
+            x = d / (0.5 * t["largeur"][idx] * (1 + (0.0 if plateau else var[idx])))   # (la variation par segment y faisait une marche
+            # du bord du sillon à chaque jonction de segments : tirets brillants avec le profil plat, 2026-11-13)
+            prof = np.clip(1 - np.abs(x) ** PROFIL, 0, 1) ** (1 / PROFIL)            # 1 au milieu du cordon, 0 au bord
+            prof = np.where(x > VIDE, 1.0, prof)          # loin de tout cordon (vide du tranchage) : comblé, pas une tranchée
+            rel = RELIEF["plateau"] if plateau else RELIEF[nom]
             hauteur[m] = (rel * hs[kk] * (prof - 1)).astype(np.float32)
             v = np.stack([ux, uy, np.zeros_like(ux)], -1) @ R                         # direction du fil → repère de l'objet
             fil[m] = v

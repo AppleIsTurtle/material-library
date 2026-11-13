@@ -10,7 +10,7 @@ Paquet Python importé par les scripts Blender des projets (`import material_lib
 | visserie/ | (à venir) normes DIN / ISO, fixations, filets, shading des vis | 05 |
 | imperfections/ | (à venir) imperfections PBR, UV dépliés en mm | 05 |
 | impression/ | (à venir) encre, décalques, calques imprimés | 04 |
-| rendu.py | **Rendu produit, méthode complète** : `studio()` (scène de référence en lecture, Cycles GPU), `piece_fdm()` (soudure STL, normales pondérées, matière FDM, vrais trajets, Bevel PLA), `piece()` (autres procédés), `visserie()` (Bevel des têtes), `camera()` / `viser()` / `rendre()` ; variable `MATERIAL_LIBRARY_STUDIO` | — |
+| rendu.py | **Rendu produit, méthode complète** : `studio()` (scène de référence en lecture, Cycles GPU), `piece_fdm()` (soudure STL, normales pondérées, matière FDM, vrais trajets, Bevel PLA), `piece()` (autres procédés), `visserie()` (Bevel des têtes et imperfections, comme `V3_vis_grise` des rendus F-COM), `res_premier_lit` (premier lit à part, plan, ombré à plat, cartes plus fines), `camera()` / `viser()` / `rendre()` ; variable `MATERIAL_LIBRARY_STUDIO` | — |
 | conception/ | (à venir) cotes de panneau, caisson, supports, contrôles (trous, collisions) | 07 |
 
 ## Historique

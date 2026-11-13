@@ -148,6 +148,7 @@ PLATEAU_LISSE = 3.0            # plateau lisse : sillons du premier lit ×3 (≈
                                # lignes du premier lit se lisent dans le reflet de la face (Lou, 2026-11-13 : « on ne voit pas les
                                # marques du routing, même en macro »)
 ANISOTROPIE = 0.3              # reflet étiré le long du fil
+PROFIL_COUCHE = 4.0            # profil des couches des tranches : super-ellipse (2 = demi-cercle, trop bombé : Lou, 2026-11-13)
 
 
 def _cuire(o, res, sortie):
@@ -219,9 +220,16 @@ def trajets(o, trajets_npz, res=None, copie=True, dossier=None):
     uvs.active = uvs.get("UV_fdm") or uvs.new(name="UV_fdm")
     for x in bpy.context.view_layer.objects: x.select_set(False)
     o.hide_set(False); o.select_set(True); bpy.context.view_layer.objects.active = o
-    bpy.ops.object.mode_set(mode="EDIT"); bpy.ops.mesh.select_all(action="SELECT")
-    bpy.ops.uv.smart_project(angle_limit=math.radians(66), island_margin=0.003)
-    bpy.ops.object.mode_set(mode="OBJECT")
+    if o.get("uv_plan"):                                   # face plane (premier lit de rendu.piece_fdm) : projection à plat, un
+        i_ = "XYZ".index(str(o["uv_plan"]).upper()); a_, b_ = [k for k in range(3) if k != i_]   # seul îlot, sans couture
+        lay = o.data.uv_layers["UV_fdm"]; co = [v.co for v in o.data.vertices]
+        lo = [min(c[a_] for c in co), min(c[b_] for c in co)]; e = max(max(c[a_] for c in co) - lo[0], max(c[b_] for c in co) - lo[1])
+        for li, lp in enumerate(o.data.loops):
+            c = co[lp.vertex_index]; lay.data[li].uv = ((c[a_] - lo[0]) / e, (c[b_] - lo[1]) / e)
+    else:
+        bpy.ops.object.mode_set(mode="EDIT"); bpy.ops.mesh.select_all(action="SELECT")
+        bpy.ops.uv.smart_project(angle_limit=math.radians(66), island_margin=0.003)   # îlots : coutures dans les cartes
+        bpy.ops.object.mode_set(mode="OBJECT")
     moteur = sc.render.engine; sc.render.engine = "CYCLES"
     P, Nn = _cuire(o, res, "pos"), _cuire(o, res, "nor")
     sc.render.engine = moteur
@@ -265,7 +273,8 @@ def trajets(o, trajets_npz, res=None, copie=True, dossier=None):
     tl = _op(nt, "ADD", _op(nt, "MULTIPLY", prem, _op(nt, "DIVIDE", zp, h0)),
              _op(nt, "MULTIPLY", _op(nt, "SUBTRACT", 1.0, prem), _op(nt, "FRACT", u)))
     s = _op(nt, "SUBTRACT", _op(nt, "MULTIPLY", tl, 2.0), 1.0)
-    prof = _op(nt, "SQRT", _op(nt, "MAXIMUM", _op(nt, "SUBTRACT", 1.0, _op(nt, "MULTIPLY", s, s)), 0.0))
+    prof = _op(nt, "POWER", _op(nt, "MAXIMUM", _op(nt, "SUBTRACT", 1.0, _op(nt, "POWER", _op(nt, "ABSOLUTE", s), PROFIL_COUCHE)), 0.0),
+               1.0 / PROFIL_COUCHE)                     # couche plate, sillon net entre deux couches (même profil que cartes.PROFIL)
     wn = nt.nodes.new("ShaderNodeTexWhiteNoise"); wn.noise_dimensions = "1D"
     nt.links.new(_op(nt, "FLOOR", u), wn.inputs["W"])                           # chaque couche un peu différente
     amp = _op(nt, "ADD", _op(nt, "MULTIPLY", wn.outputs["Value"], 0.4 * RELIEF_TRANCHE * h), 0.8 * RELIEF_TRANCHE * h)

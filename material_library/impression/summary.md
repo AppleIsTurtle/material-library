@@ -20,3 +20,4 @@ dont les .npz sont lus par `matieres/procedes.py`. Méthode : [methode/procedes.
   decalques.py, simulation_impression_facade.py → tranchage.py, simulation_lettres_facade.py → lettres.py), STL en arguments (chunk-04).
 - 2026-10-28 : tranchage.py réécrit, calé sur OrcaSlicer (feature fdm-trajets, chunk-02) ; `procedes.appliquer_traces` lit encore l'ancien format jusqu'au chunk-03.
 - 2026-10-28 : cartes.py ; tranchage.py écrit aussi origine, tops et hauteurs des couches (chunk-03).
+- 2026-11-13 : cartes.py : profil des cordons en super-ellipse (`PROFIL` 4 : dessus plat, sillon net ; demi-ellipse avant, Lou : « trop arrondis, pas assez plats et sharp ») ; texels loin de tout cordon (`VIDE` > 1,25 demi-largeur) laissés à plat au lieu d'une tranchée ; premier lit à largeur constante (la variation par segment faisait une marche au bord du sillon à chaque jonction : tirets brillants).
