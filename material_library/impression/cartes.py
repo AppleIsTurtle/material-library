@@ -2,10 +2,11 @@ r"""Cartes de rendu des cordons FDM (feature fdm-trajets, chunk-03) : Python sys
     python cartes.py <cuisson.npz> <trajets.npz> <sortie.npz>
 cuisson.npz : P (position) et N (normale) de chaque texel dans le repère de l'objet (cuits par procedes.trajets dans Blender),
 masque des texels utiles. trajets.npz : sortie de tranchage.py (repère d'impression + rotation / origine).
-Sortie : `hauteur` (mm, ≤ 0 : creux entre cordons, sur les dessus, les dessous et aux coutures) et `fil` (direction du fil, repère
-de l'objet, pour l'anisotropie du reflet), de la taille de la cuisson. Les couches des tranches ne sont PAS dans la carte : le
+Sortie : `hauteur` (mm : bourrelets des coutures des tranches), `fil` (direction du fil, repère de l'objet, pour l'anisotropie du
+reflet) et `cordons` (chunk-07 : phase des lignes en (cos 2πc, sin 2πc) et profondeur des sillons, mm) — des champs lisses : le
+shader (procedes.trajets) construit le profil des cordons à chaque point rendu, net à toute résolution. Les couches des tranches ne sont PAS dans la carte : le
 shader les calcule (nettes à toute résolution) ; la carte n'y ajoute que les coutures.
-Profil d'un cordon : super-ellipse d'exposant PROFIL, plate au milieu (largeur réelle du trajet, hauteur de la couche), cordons voisins qui se recouvrent (le creux
+Profil d'un cordon (construit par le shader) : super-ellipse plate au milieu (largeur réelle du trajet, hauteur de la couche), cordons voisins qui se recouvrent (le creux
 entre deux cordons vient de leur pas d'écrasement) ; relief réduit sur les dessus (la buse lisse le haut du cordon) et sur la
 face du plateau (cordon écrasé sur le PEI)."""
 import sys
@@ -21,8 +22,6 @@ RELIEF = dict(dessus=0.16, plateau=0.035, dessous=0.30)   # creux entre cordons,
 COUTURE = 0.18                                            # bourrelet de couture, en part de la hauteur de couche
 VIDE = 1.25              # au-delà de 1,25 demi-largeur du cordon le plus proche : matière écrasée / remplissage, à plat (sinon des
                          # tranchées à fond plat, bords raides → tirets brillants sur la face, 2026-11-13)
-PROFIL = 4.0             # profil d'un cordon : super-ellipse (1 − |x|^n)^(1/n) ; 2 = demi-ellipse (avant le 2026-11-13, trop bombée :
-                         # Lou, « lignes trop arrondies, pas assez plates et sharp ») ; 4 : dessus plat, sillon étroit et franc
 NORMALE = 0.70                                            # |n.z| au-delà : face de dessus / dessous ; en deçà : tranche
 
 
@@ -54,7 +53,7 @@ def cartes(P, N, masque, t):
     tops, hs = np.asarray(t["tops"]), np.asarray(t["hauteurs"])
     q = P @ R.T - org; nq = N @ R.T
     hauteur = np.zeros(P.shape[:-1], np.float32); fil = np.zeros(P.shape, np.float32)
-    rng = np.random.default_rng(5); var = rng.normal(0, 0.06, len(t["x0"]))            # cordons un peu inégaux
+    cordons = np.zeros(P.shape, np.float32)          # (cos 2πc, sin 2πc, profondeur des sillons en mm) : champs lisses (chunk-07)
     pas_trame = float(np.min(t["largeur"][t["largeur"] > 0])) / 5
     vis = (t["type"] != TYPES.index("Sparse infill")) & (t["type"] != TYPES.index("Internal Bridge"))
     nz = nq[..., 2]
@@ -81,13 +80,17 @@ def cartes(P, N, masque, t):
                         mieux = r_[0] < best[1]
                         best = tuple(np.where(mieux, a, b) for a, b in zip((i_, *r_), best))
             idx, d, ux, uy = best
-            plateau = nom == "dessous" and kk == 0           # premier lit : écrasé régulièrement sur le plateau, largeur constante
-            x = d / (0.5 * t["largeur"][idx] * (1 + (0.0 if plateau else var[idx])))   # (la variation par segment y faisait une marche
-            # du bord du sillon à chaque jonction de segments : tirets brillants avec le profil plat, 2026-11-13)
-            prof = np.clip(1 - np.abs(x) ** PROFIL, 0, 1) ** (1 / PROFIL)            # 1 au milieu du cordon, 0 au bord
-            prof = np.where(x > VIDE, 1.0, prof)          # loin de tout cordon (vide du tranchage) : comblé, pas une tranchée
+            plateau = nom == "dessous" and kk == 0           # premier lit
+            demi = 0.5 * t["largeur"][idx]
+            # phase des lignes (chunk-07) : distance signée à l'axe du cordon le plus proche, direction rendue canonique (une ligne
+            # parallèle à sa voisine a le même sens), divisée par le pas entre cordons ; le shader en fait le profil, net à tout zoom
+            cx, cy = np.where(ux < 0, -ux, ux), np.where(ux < 0, -uy, uy)
+            sd = (py - t["y0"][idx]) * cx - (px - t["x0"][idx]) * cy
+            pas = t["largeur"][idx] - hs[kk] * (1 - np.pi / 4)
+            c = sd / pas
             rel = RELIEF["plateau"] if plateau else RELIEF[nom]
-            hauteur[m] = (rel * hs[kk] * (prof - 1)).astype(np.float32)
+            prof_ = np.where(d > VIDE * demi, 0.0, rel * hs[kk])   # loin de tout cordon (vide du tranchage) : comblé, sans sillon
+            cordons[m] = np.stack([np.cos(2 * np.pi * c), np.sin(2 * np.pi * c), prof_], -1).astype(np.float32)
             v = np.stack([ux, uy, np.zeros_like(ux)], -1) @ R                         # direction du fil → repère de l'objet
             fil[m] = v
     # tranches : direction du fil = horizontale le long du contour ; bourrelet aux coutures (début de chaque paroi extérieure)
@@ -109,11 +112,11 @@ def cartes(P, N, masque, t):
             d = np.maximum(d - 0.5 * w, 0)                                             # le point est sur l'axe, la tranche à ½ largeur
             ht[sel] = COUTURE * hs[kk] * np.exp(-(d / (0.6 * w)) ** 2)
         hauteur[tr] = ht
-    return hauteur, fil
+    return hauteur, fil, cordons
 
 
 if __name__ == "__main__":
     c = np.load(sys.argv[1]); t = dict(np.load(sys.argv[2], allow_pickle=True))
-    h, f = cartes(c["P"], c["N"], c["masque"], t)
-    np.savez_compressed(sys.argv[3], hauteur=h, fil=f)
+    h, f, co = cartes(c["P"], c["N"], c["masque"], t)
+    np.savez_compressed(sys.argv[3], hauteur=h, fil=f, cordons=co)
     print(f"cartes {h.shape} : creux {h.min():.4f} mm, coutures {h.max():.4f} mm", flush=True)

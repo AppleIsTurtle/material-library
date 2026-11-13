@@ -113,7 +113,7 @@ def couches(materiaux, couche=0.2, axe="Y", distance=0.025):
 # gros plan) ; « granuleux » = plaque d'impression granuleuse du F-COM1 (photo de Lou du 2026-10-26, ancienne façade U1 de la
 # maquette : cellules de 0,35, ± 0,05), voulue pour la façade noire du F-COM2 (Lou, 2026-10-28)
 GRAINS = {"fin": (0.06, 0.003, 1.0, 0.4), "granuleux": (0.35, 0.05, 2.0, 0.55),
-          "lisse": (0.06, 0.0, 1.0, 0.4)}   # plateau lisse (Lou, 2026-11-13 : façade du F-COM3 noir) : aucun grain, face plane
+          "lisse": (0.04, 0.0012, 3.0, 0.5)}   # plateau lisse (Lou, 2026-11-13) : léger grain en relief seul (± 1,2 µm), sans brillance
 
 
 def plateau_texture(m, face="-Y", tuile=None, amp=None, grain="fin"):
@@ -121,8 +121,8 @@ def plateau_texture(m, face="-Y", tuile=None, amp=None, grain="fin"):
     (photo de Lou du 2026-10-26 : grain brillant) : bruit de `tuile` mm, hauteur ± amp mm (défauts : GRAINS[grain]), sans
     variation à grande échelle ; sommets un peu plus brillants. Masque (nœud « plateau_masque ») par la normale seule : trajets()
     le restreint ensuite aux points réellement au contact du plateau (un creux tourné vers le plateau ne l'a jamais touché)."""
-    t0, a0, detail, rough = GRAINS[grain]; tuile = tuile or t0; amp = a0 if amp is None else amp
-    if amp == 0: return m          # plateau lisse : ni relief ni brillance de grain (le bruit des sommets brillants restait, 2026-11-13)
+    t0, a0, detail, rough = GRAINS[grain]; tuile = tuile or t0; amp = a0 if amp is None else amp; nom_grain = grain
+    if amp == 0: return m
     nt = m.node_tree; b = _bsdf(m)
     grain = _op(nt, "SUBTRACT", N.bruit(nt, 1 / tuile, detail, rough).outputs["Fac"], 0.5)
     grain = _op(nt, "MULTIPLY", grain, 0.35 / 0.2)                               # ± 0,35 environ, comme avant
@@ -138,7 +138,8 @@ def plateau_texture(m, face="-Y", tuile=None, amp=None, grain="fin"):
     ri = b.inputs["Roughness"]                                                    # sommets des grains plus brillants (face seule)
     r0 = ri.links[0].from_socket if ri.is_linked else ri.default_value
     brille = _op(nt, "MULTIPLY", _op(nt, "MULTIPLY", _op(nt, "MAXIMUM", grain, 0.0), 1 / 0.35), mr.outputs["Result"])
-    nt.links.new(_op(nt, "MULTIPLY", r0, _op(nt, "SUBTRACT", 1.0, _op(nt, "MULTIPLY", brille, 0.4))), ri)
+    if nom_grain != "lisse":              # sommets brillants : pas sur le plateau lisse (bruit trop fort et répété, Lou 2026-11-13)
+        nt.links.new(_op(nt, "MULTIPLY", r0, _op(nt, "SUBTRACT", 1.0, _op(nt, "MULTIPLY", brille, 0.4))), ri)
     return m
 
 
@@ -148,7 +149,11 @@ PLATEAU_LISSE = 3.0            # plateau lisse : sillons du premier lit ×3 (≈
                                # lignes du premier lit se lisent dans le reflet de la face (Lou, 2026-11-13 : « on ne voit pas les
                                # marques du routing, même en macro »)
 ANISOTROPIE = 0.3              # reflet étiré le long du fil
-PROFIL_COUCHE = 4.0            # profil des couches des tranches : super-ellipse (2 = demi-cercle, trop bombé : Lou, 2026-11-13)
+PROFIL_COUCHE = 6.0            # profil des couches et des cordons : super-ellipse (2 = demi-cercle, trop bombé ; 6 : plat, bord net — Lou,
+                               # 2026-11-13 : « dans la vraie vie, plus sharp, moins arrondi »)
+ONDULATION = 0.012             # mm : bord des cordons pas parfaitement droit (bruit ≈ 2 mm) — Lou : « pas parfaitement droites »
+COUPURES = (8.0, 0.74, 0.86, 0.22)   # petites coupures éparses sur les bords : bruit d'échelle 8 (≈ 0,12 mm), seuil 0,74 → 0,86,
+                               # le bord recule jusqu'à 0,22 demi-pas
 
 
 def _cuire(o, res, sortie):
@@ -242,9 +247,10 @@ def trajets(o, trajets_npz, res=None, copie=True, dossier=None):
         r = subprocess.run([SP.PYTHON_SYSTEME, script, cu, trajets_npz, so], capture_output=True, text=True)
         if r.returncode: raise RuntimeError(f"cartes.py : {r.stdout[-1500:]}\n{r.stderr[-1500:]}")
         print("TRAJETS", o.name, res, r.stdout.strip(), flush=True)
-        with np.load(so) as c: ch, cf = c["hauteur"].copy(), c["fil"].copy()
+        with np.load(so) as c: ch, cf, cc = c["hauteur"].copy(), c["fil"].copy(), c["cordons"].copy()
     fic = (lambda n: os.path.join(dossier, f"{o.name}_{n}.exr")) if dossier else (lambda n: None)
     ih, ifil = _image(f"SP_hauteur_{o.name}", ch, fic("hauteur")), _image(f"SP_fil_{o.name}", cf, fic("fil")); del ch, cf
+    icor = _image(f"SP_cordons_{o.name}", cc, fic("cordons")); del cc
     m = o.data.materials[0]
     if copie: m = m.copy(); m.name = f"{o.data.materials[0].name}_{o.name}"; o.data.materials[0] = m
     nt = m.node_tree; b = _bsdf(m)
@@ -283,13 +289,33 @@ def trajets(o, trajets_npz, res=None, copie=True, dossier=None):
     th = nt.nodes.new("ShaderNodeTexImage"); th.image = ih; th.interpolation = "Cubic"; nt.links.new(uv.outputs["UV"], th.inputs["Vector"])
     tf = nt.nodes.new("ShaderNodeTexImage"); tf.image = ifil; tf.interpolation = "Closest"; nt.links.new(uv.outputs["UV"], tf.inputs["Vector"])
     sep = nt.nodes.new("ShaderNodeSeparateColor"); nt.links.new(th.outputs["Color"], sep.inputs["Color"])
-    carte = sep.outputs["Red"]
+    # cordons des dessus et des dessous (chunk-07) : construits ici à chaque point rendu, nets à tout zoom, d'après les champs
+    # lisses de la carte « cordons » (phase des lignes, profondeur des sillons)
+    tco = nt.nodes.new("ShaderNodeTexImage"); tco.image = icor; tco.interpolation = "Linear"; tco.name = "cordons_fdm"
+    nt.links.new(uv.outputs["UV"], tco.inputs["Vector"])
+    sco = nt.nodes.new("ShaderNodeSeparateColor"); nt.links.new(tco.outputs["Color"], sco.inputs["Color"])
+    phase = _op(nt, "ABSOLUTE", _op(nt, "ARCTAN2", sco.outputs["Green"], sco.outputs["Red"]))   # |2πc| ∈ [0, π]
+    w = float(np.median(t["largeur"][t["largeur"] > 0])); pas = w - h * (1 - math.pi / 4)
+    x = _op(nt, "DIVIDE", phase, math.pi)            # 0 sur l'axe du cordon, 1 au sillon (milieu entre deux axes : les cordons se
+    # recouvrent, le sillon a toute sa profondeur RELIEF × couche ; en demi-largeur, il n'en avait que ≈ 11 % avec le profil plat)
+    pos = tc.outputs["Object"]
+    def bruit(echelle, detail):
+        n_ = nt.nodes.new("ShaderNodeTexNoise"); n_.inputs["Scale"].default_value = echelle; n_.inputs["Detail"].default_value = detail
+        nt.links.new(pos, n_.inputs["Vector"]); return n_.outputs["Fac"]
+    x = _op(nt, "ADD", x, _op(nt, "MULTIPLY", _op(nt, "SUBTRACT", bruit(0.5, 2.0), 0.5), 4 * ONDULATION / (0.5 * pas)))  # bord ondulé
+    cp = nt.nodes.new("ShaderNodeMapRange"); cp.name = "coupures_fdm"
+    cp.inputs["From Min"].default_value, cp.inputs["From Max"].default_value = COUPURES[1], COUPURES[2]
+    cp.inputs["To Min"].default_value, cp.inputs["To Max"].default_value = 0.0, COUPURES[3]
+    nt.links.new(bruit(COUPURES[0], 3.0), cp.inputs["Value"]); x = _op(nt, "ADD", x, cp.outputs["Result"])   # coupures sur les bords
+    n6 = PROFIL_COUCHE
+    profil = _op(nt, "POWER", _op(nt, "MAXIMUM", _op(nt, "SUBTRACT", 1.0, _op(nt, "POWER", _op(nt, "ABSOLUTE", x), n6)), 0.0), 1.0 / n6)
+    h_cordons = _op(nt, "MULTIPLY", _op(nt, "SUBTRACT", profil, 1.0), sco.outputs["Blue"])
     if m.get("grain") == "lisse":                           # premier lit (z ≤ 0,03 → 0,08 mm) : sillons creusés ×PLATEAU_LISSE
         lit = nt.nodes.new("ShaderNodeMapRange"); lit.name = "plateau_lisse"
         lit.inputs["From Min"].default_value, lit.inputs["From Max"].default_value = 0.03, 0.08
         lit.inputs["To Min"].default_value, lit.inputs["To Max"].default_value = PLATEAU_LISSE, 1.0
-        nt.links.new(zp, lit.inputs["Value"]); carte = _op(nt, "MULTIPLY", carte, lit.outputs["Result"])
-    hauteur = _op(nt, "ADD", h_tranche, carte)
+        nt.links.new(zp, lit.inputs["Value"]); h_cordons = _op(nt, "MULTIPLY", h_cordons, lit.outputs["Result"])
+    hauteur = _op(nt, "ADD", _op(nt, "ADD", h_tranche, sep.outputs["Red"]), h_cordons)
     bp = nt.nodes.new("ShaderNodeBump"); bp.name = "trajets_fdm_relief"
     bp.inputs["Strength"].default_value = 1.0; bp.inputs["Distance"].default_value = 1.0
     nt.links.new(hauteur, bp.inputs["Height"]); _sous_relief(nt, b, bp)

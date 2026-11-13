@@ -24,3 +24,4 @@ Paquet Python importé par les scripts Blender des projets (`import material_lib
 - 2026-10-28 : version 0.2.4 (bibliothèque de matières suivie par git dans `bibliotheque/`, une par version de Blender ; `aretes.retrancher` passe en booléen Exact sous Blender 4.4, qui n'a pas Manifold).
 - 2026-10-28 : version 0.3.1 : `DONNEES` et `PYTHON_SYSTEME` se règlent par variables d'environnement (défauts inchangés) ; `AGENTS.md` et le skill (chunk-08) ; publication : `chiffrage.pla_imprimeur` (l'imprimeur FDM n'est plus nommé).
 - 2026-11-13 : version 0.3.4 : `rendu.py` (Lou : un script de rendu ne doit plus pouvoir sauter une étape de la méthode — studio maison trop sombre, PLA sans trajets, arêtes vives) ; grain de plateau « lisse ».
+- 2026-11-13 : version 0.3.5 : cordons FDM procéduraux (feature fdm-trajets, chunk-07).
