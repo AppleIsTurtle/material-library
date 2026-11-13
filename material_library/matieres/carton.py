@@ -72,6 +72,17 @@ def matiere_carton(f):
     t = _math(nt, "ADD", t, _centre(nt, fibres, f.get("fibres_teinte", 0.025)))
     t = _math(nt, "SUBTRACT", t, _paillettes(nt, vec, 2.6, 0.045, f.get("paillettes", 0.10)))
     t = _math(nt, "ADD", t, _paillettes(nt, vec, 3.1, 0.035, f.get("paillettes", 0.10) * 0.5))
+    # filaments et taches du papier recyclé (Lou, 2026-11-14 : « des filaments et des petites taches, très légères ») : champs
+    # `filaments` et `taches` de la fiche, 0 par défaut (rien ne change pour les fiches qui ne les donnent pas)
+    if f.get("filaments"):
+        for k, (ech, et, de, signe) in enumerate(((0.22, (1 / 70.0, 1.0), (0.70, 0.78), 1.0), (0.18, (1.0, 1 / 45.0), (0.73, 0.80), 0.7),
+                                                  (0.30, (1 / 35.0, 1.0), (0.72, 0.80), -0.8))):
+            fil = N.plage(nt, _bruit(nt, vec, ech, 2.0, 0.5, etire=et, decale=21.0 + 5.3 * k), 0.0, 1.0, de=de)
+            t = _math(nt, "ADD", t, _math(nt, "MULTIPLY", fil, signe * f["filaments"]))
+    if f.get("taches"):
+        for k, (ech, de) in enumerate(((9.0, (0.66, 0.80)), (2.4, (0.70, 0.82)))):
+            ta = N.plage(nt, _bruit(nt, vec, ech, 3.0, 0.55, decale=33.0 + 4.1 * k), 0.0, 1.0, de=de)
+            t = _math(nt, "SUBTRACT", t, _math(nt, "MULTIPLY", ta, f["taches"]))
     # la cannelure se devine : lignes parallèles à Y, un peu plus claires sur les crêtes
     phase = _math(nt, "ADD", _math(nt, "MULTIPLY", sep.outputs["X"], 6.28318 / PAS_CANNELURE), _centre(nt, _bruit(nt, vec, 40.0, 2.0, 0.5, decale=9.0), 0.5))
     onde = _math(nt, "SINE", phase)
