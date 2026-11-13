@@ -80,7 +80,7 @@ def fdm(matiere="pla_noir", buse=0.4, couche=None, axe="Y", plateau=None, transl
     l'axe d'impression `axe` de la pièce — elles n'apparaissent que sur les flancs ; épaisseur de couche et de fil un peu
     irrégulières ; teinte UNIFORME (Lou, 2026-10-28 : « noise trop intense sur la diffuse » ; même règle que le nylon : le grain
     est en relief seulement) ; plateau = face posée sur le plateau texturé (« -Y », « +Z »…) : grain sur cette face seulement,
-    `grain` = « fin » ou « granuleux » (GRAINS) ; translucide : diffusion (PLA naturel, guides de lumière)."""
+    `grain` = « fin », « granuleux » ou « lisse » (GRAINS) ; translucide : diffusion (PLA naturel, guides de lumière)."""
     f = CAT.fiche(matiere); couche = couche or BUSES[buse]["couche"]
     m, nt, b = N.neuf(nom or f"{f['matiere']}_FDM_{str(couche).replace('.', '')}")
     rugo = f["rugosite"] if not isinstance(f["rugosite"], tuple) else sum(f["rugosite"][:2]) / 2
@@ -111,7 +111,8 @@ def couches(materiaux, couche=0.2, axe="Y", distance=0.025):
 # grains de plateau (tuile mm, hauteur ± mm, détail et rugosité du bruit) : « fin » = PEI poudré fin (défaut, sans taches au
 # gros plan) ; « granuleux » = plaque d'impression granuleuse du F-COM1 (photo de Lou du 2026-10-26, ancienne façade U1 de la
 # maquette : cellules de 0,35, ± 0,05), voulue pour la façade noire du F-COM2 (Lou, 2026-10-28)
-GRAINS = {"fin": (0.06, 0.003, 1.0, 0.4), "granuleux": (0.35, 0.05, 2.0, 0.55)}
+GRAINS = {"fin": (0.06, 0.003, 1.0, 0.4), "granuleux": (0.35, 0.05, 2.0, 0.55),
+          "lisse": (0.06, 0.0, 1.0, 0.4)}   # plateau lisse (Lou, 2026-11-13 : façade du F-COM3 noir) : aucun grain, face plane
 
 
 def plateau_texture(m, face="-Y", tuile=None, amp=None, grain="fin"):

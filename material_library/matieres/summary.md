@@ -26,3 +26,4 @@ Matières physiques (chunk-03) et looks par procédé (chunk-04). Méthode : [me
 - 2026-10-28 : appliquer_traces retiré (remplacé par trajets, fdm-trajets chunk-05).
 - 2026-10-28 : reglages_fdm.py ; procedes.trajets : UV « UV_fdm » à part, cartes en EXR (dossier), modification sur place (copie=False) (fdm-trajets, chunk-04).
 - 2026-10-28 : procedes.trajets / _cuire / _image, grain du plateau refait sans variation à grande échelle (fdm-trajets, chunk-03).
+- 2026-11-13 : procedes.GRAINS « lisse » (plateau lisse, sans grain : Lou, façade du F-COM3 noir) ; pas encore dans le menu « Grain du plateau » du panneau FDM (reglages_fdm.py a des changements en cours d'une autre session).
