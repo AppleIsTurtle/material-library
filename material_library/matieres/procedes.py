@@ -93,6 +93,7 @@ def fdm(matiere="pla_noir", buse=0.4, couche=None, axe="Y", plateau=None, transl
         b.inputs["Subsurface Weight"].default_value = translucide; b.inputs["Subsurface Scale"].default_value = 0.35
         b.inputs["Subsurface Radius"].default_value = (1.0, 0.9, 0.7)
     if plateau: plateau_texture(m, plateau, grain=grain)
+    m["grain"] = grain if plateau else ""
     m.diffuse_color = srgb(f["base"]); m["material_library"] = matiere; m["procede"] = f"FDM buse {buse}, couches {couche}, axe {axe}"
     return AR.bevel_rendu(m, f.get("bevel") or AR.RAYONS["pla"])
 
@@ -120,7 +121,8 @@ def plateau_texture(m, face="-Y", tuile=None, amp=None, grain="fin"):
     (photo de Lou du 2026-10-26 : grain brillant) : bruit de `tuile` mm, hauteur ± amp mm (défauts : GRAINS[grain]), sans
     variation à grande échelle ; sommets un peu plus brillants. Masque (nœud « plateau_masque ») par la normale seule : trajets()
     le restreint ensuite aux points réellement au contact du plateau (un creux tourné vers le plateau ne l'a jamais touché)."""
-    t0, a0, detail, rough = GRAINS[grain]; tuile = tuile or t0; amp = amp or a0
+    t0, a0, detail, rough = GRAINS[grain]; tuile = tuile or t0; amp = a0 if amp is None else amp
+    if amp == 0: return m          # plateau lisse : ni relief ni brillance de grain (le bruit des sommets brillants restait, 2026-11-13)
     nt = m.node_tree; b = _bsdf(m)
     grain = _op(nt, "SUBTRACT", N.bruit(nt, 1 / tuile, detail, rough).outputs["Fac"], 0.5)
     grain = _op(nt, "MULTIPLY", grain, 0.35 / 0.2)                               # ± 0,35 environ, comme avant
@@ -142,6 +144,9 @@ def plateau_texture(m, face="-Y", tuile=None, amp=None, grain="fin"):
 
 # ------------------------------------------------------------------ trajets réels de la buse (feature fdm-trajets, chunk-03)
 RELIEF_TRANCHE = 0.22          # creux entre deux couches sur une tranche, en part de la hauteur de couche (0,044 mm en 0,2)
+PLATEAU_LISSE = 3.0            # plateau lisse : sillons du premier lit ×3 (≈ 0,02 mm au lieu de 0,007) ; sur un plateau lisse, les
+                               # lignes du premier lit se lisent dans le reflet de la face (Lou, 2026-11-13 : « on ne voit pas les
+                               # marques du routing, même en macro »)
 ANISOTROPIE = 0.3              # reflet étiré le long du fil
 
 
@@ -269,7 +274,13 @@ def trajets(o, trajets_npz, res=None, copie=True, dossier=None):
     th = nt.nodes.new("ShaderNodeTexImage"); th.image = ih; th.interpolation = "Cubic"; nt.links.new(uv.outputs["UV"], th.inputs["Vector"])
     tf = nt.nodes.new("ShaderNodeTexImage"); tf.image = ifil; tf.interpolation = "Closest"; nt.links.new(uv.outputs["UV"], tf.inputs["Vector"])
     sep = nt.nodes.new("ShaderNodeSeparateColor"); nt.links.new(th.outputs["Color"], sep.inputs["Color"])
-    hauteur = _op(nt, "ADD", h_tranche, sep.outputs["Red"])
+    carte = sep.outputs["Red"]
+    if m.get("grain") == "lisse":                           # premier lit (z ≤ 0,03 → 0,08 mm) : sillons creusés ×PLATEAU_LISSE
+        lit = nt.nodes.new("ShaderNodeMapRange"); lit.name = "plateau_lisse"
+        lit.inputs["From Min"].default_value, lit.inputs["From Max"].default_value = 0.03, 0.08
+        lit.inputs["To Min"].default_value, lit.inputs["To Max"].default_value = PLATEAU_LISSE, 1.0
+        nt.links.new(zp, lit.inputs["Value"]); carte = _op(nt, "MULTIPLY", carte, lit.outputs["Result"])
+    hauteur = _op(nt, "ADD", h_tranche, carte)
     bp = nt.nodes.new("ShaderNodeBump"); bp.name = "trajets_fdm_relief"
     bp.inputs["Strength"].default_value = 1.0; bp.inputs["Distance"].default_value = 1.0
     nt.links.new(hauteur, bp.inputs["Height"]); _sous_relief(nt, b, bp)

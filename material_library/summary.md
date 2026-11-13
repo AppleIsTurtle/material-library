@@ -10,6 +10,7 @@ Paquet Python importé par les scripts Blender des projets (`import material_lib
 | visserie/ | (à venir) normes DIN / ISO, fixations, filets, shading des vis | 05 |
 | imperfections/ | (à venir) imperfections PBR, UV dépliés en mm | 05 |
 | impression/ | (à venir) encre, décalques, calques imprimés | 04 |
+| rendu.py | **Rendu produit, méthode complète** : `studio()` (scène de référence en lecture, Cycles GPU), `piece_fdm()` (soudure STL, normales pondérées, matière FDM, vrais trajets, Bevel PLA), `piece()` (autres procédés), `visserie()` (Bevel des têtes), `camera()` / `viser()` / `rendre()` ; variable `MATERIAL_LIBRARY_STUDIO` | — |
 | conception/ | (à venir) cotes de panneau, caisson, supports, contrôles (trous, collisions) | 07 |
 
 ## Historique
@@ -22,3 +23,4 @@ Paquet Python importé par les scripts Blender des projets (`import material_lib
 - 2026-10-28 : version 0.3.0 : le dépôt studio-produit devient material-library (paquet `material_library`, add-on `material_library_fdm`) ; les noms de données `SP_*` et la propriété `sp_fdm` restent (compatibilité des scènes).
 - 2026-10-28 : version 0.2.4 (bibliothèque de matières suivie par git dans `bibliotheque/`, une par version de Blender ; `aretes.retrancher` passe en booléen Exact sous Blender 4.4, qui n'a pas Manifold).
 - 2026-10-28 : version 0.3.1 : `DONNEES` et `PYTHON_SYSTEME` se règlent par variables d'environnement (défauts inchangés) ; `AGENTS.md` et le skill (chunk-08) ; publication : `chiffrage.pla_imprimeur` (l'imprimeur FDM n'est plus nommé).
+- 2026-11-13 : version 0.3.4 : `rendu.py` (Lou : un script de rendu ne doit plus pouvoir sauter une étape de la méthode — studio maison trop sombre, PLA sans trajets, arêtes vives) ; grain de plateau « lisse ».

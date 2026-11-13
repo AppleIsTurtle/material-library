@@ -30,6 +30,7 @@ assert SP.__version__.startswith("0.3."), SP.__version__     # version attendue 
 | `matieres.couleurs` | conversions, pipette, base compensée pour un studio | `srgb(hexa)`, `hexa(lin)`, `ecart(h1, h2)`, `compenser(base, cible, rendre_et_mesurer)` |
 | `aretes` (`AR`) | aucune arête vive : géométrie et rendu | `AR.plaque(w, h, r, y0, y1, (av, ar))` → bmesh, `AR.coupe(...)`, `AR.retrancher(cible, outils)`, `AR.lisser(ob)`, `AR.adoucir(ob, largeur)`, `AR.bevel_rendu(m, rayon)`, `AR.aretes_douces(mats)`, `AR.aretes_vives(ob)` (contrôle), `AR.RAYONS` |
 | `visserie.pieces` (`VP`) | vis, écrous, rondelles, inserts du commerce par leur désignation | `VP.vis("M3 x 8 ISO 7045 inox A2", x, z, y_appui)`, `VP.ecrou("M3 ISO 4032 inox", …)`, `VP.rondelle("M3 DIN 125", …)`, `VP.insert("M3 INSERT laiton", …)`, `VP.piece(designation, …)` ; normes : vis à tête cylindrique fendue DIN 84 / ISO 1207, bombée cruciforme ISO 7045, fraisée cruciforme ISO 7046 / DIN 965, cylindrique six pans creux ISO 4762 / DIN 912 ; écrou ISO 4032 / DIN 934 ; rondelle DIN 125 ; matières : inox (A2, A4), oxyde (noir), laiton |
+| `rendu` (`RD`) | **tout rendu produit** (même brouillon) : la méthode complète, sans étape à oublier | `RD.studio(echantillons)` (studio de référence ouvert en lecture, sinon erreur), `RD.piece_fdm(ob, "pla_noir", plateau="-Y", grain="lisse")` (soudure, normales pondérées, vrais trajets, Bevel), `RD.piece(ob, matiere, arrondi)`, `RD.visserie(objets)` (Bevel + imperfections des métaux), `RD.camera(...)`, `RD.viser(...)`, `RD.rendre(chemin, res)` |
 | `imperfections` | poussière, frottements, rayures (PBR) sans toucher aux valeurs physiques | `imperfections.imperfections.appliquer(objets, force=1.0)`, `imperfections.uv_mm.uv_plan_mm(ob)` (UV en mm) |
 | `conception` | méthode de conception d'un boîtier à façade | `panneau` (Python seul : `taille`, `Panneau`, `verifier`), `caisson.construire`, `supports.construire`, `controles` (`trous`, `collisions`, `parois`, `volume_cm3`), `chiffrage` (`tableau`, prix datés) |
 | `impression` | lettres imprimées ou gravées, encre, décalques, tranchage | voir [material_library/impression/summary.md](material_library/impression/summary.md) |
@@ -90,7 +91,7 @@ mauvaises, voulues = CT.collisions(noms=[ob.name] + [o.name for o in vis],
 print("OK", SP.__version__, ob.name, ob.active_material.name, [o.name for o in vis])
 bpy.ops.wm.save_as_mainfile(filepath=os.path.join(ICI, "piece.blend"))
 
-if "apercu" in sys.argv:                                 # aperçu rapide : sol (plan xy, z en haut), deux lampes, caméra 3/4
+if "apercu" in sys.argv:   # contrôle de GÉOMÉTRIE seulement (pas un rendu : voir « Rendu produit » ci-dessous) : sol, deux lampes, caméra 3/4
     sol = bpy.data.objects.new("sol", bpy.data.meshes.new("sol")); sc.collection.objects.link(sol)
     b = bmesh.new(); bmesh.ops.create_grid(b, x_segments=1, y_segments=1, size=300); b.to_mesh(sol.data); b.free()
     sol.data.materials.append(CAT.construire("sla_jlc_grey"))
@@ -110,6 +111,22 @@ if "apercu" in sys.argv:                                 # aperçu rapide : sol 
 Lancer : `blender -b --factory-startup --python piece.py` (chez Lou : `F:\Software\Blender\5.1\blender.exe`), avec `-- apercu` à la fin
 pour l'image. Sortie attendue : `arêtes vives : 0`, `CONTROLE COLLISIONS : 0 collision(s) à corriger…` puis
 `OK 0.3.1 plaque SP_PLA_noir_FDM… ['SP_VIS', 'SP_VIS_filet', 'SP_VIS_ame']`. Regarder l'aperçu soi-même avant de le montrer.
+
+### Rendu produit (toute image montrée, brouillon compris)
+
+L'aperçu de l'exemple ci-dessus contrôle une géométrie ; **une image de la pièce passe par `material_library.rendu`** : studio de
+référence (celui où les bases des matières sont compensées à la pipette : un studio maison rend le PLA noir bouché), vrais trajets
+FDM, normales pondérées, nœud Bevel. « Brouillon » = moins d'échantillons, jamais moins de méthode.
+
+```python
+from material_library import rendu as RD
+sc = RD.studio(128)                                       # lancé par : blender -b <RD.STUDIO> --python script.py
+RD.piece_fdm(facade, "pla_noir", plateau="-Y", res=4096)  # face avant sur le plateau lisse ; trajets=False, arrondi=0 : couche à fleur
+RD.visserie(VP.vis("M3 x 16 DIN 84 inox A2", x, z, y_appui))
+cam = RD.camera("CAM", (95, -300, 120), (0, 0, 33), 70); RD.rendre(r"...ace.png", (1600, 900))
+```
+Avant de montrer : un gros plan en lumière rasante (arêtes, grain du plateau), et `AR.aretes_vives` sur les pièces dessinées.
+Exemple complet : `SimLogix/cad/f-com/f-com3_noir/rendus/facade_fusionnee/rendre_facade_fusionnee.py`.
 
 ### Pièges
 
