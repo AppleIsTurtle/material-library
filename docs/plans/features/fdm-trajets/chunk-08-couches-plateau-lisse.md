@@ -45,3 +45,4 @@ Chaque couche multiplie sa contribution par un nœud Valeur nommé `couche_<nom>
 
 ## Journal
 - 2026-11-14 : couches 1, 2, 3, 10 codées avec leurs interrupteurs ; planche faite. Le moutonnement régulier de la vue d'ensemble venait de la **base** (`fdm()` : rugosité par un bruit unique de 2 mm), trouvé en éteignant toutes les couches : remplacé par `noeuds.bruit_multi` (Lou : « de l'aléatoire à différentes échelles »). Couches 2 et 3 baissées (vue d'ensemble trop marquée).
+- 2026-11-14 : rugosité de base refaite (`noeuds.bruit_zones` : 25 mm, 4,5 octaves, rugosité de bruit 0,7, contraste) après visualisation du champ seul (vue de face en émission) ; validée par Lou sur la façade (« parfait »).

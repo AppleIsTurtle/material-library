@@ -49,6 +49,22 @@ def bruit_multi(nt, echelles, poids=None, graine=0.0, coord="Object"):
     return op("ADD", somme, 0.5)
 
 
+def bruit_zones(nt, echelle=25.0, detail=4.5, rugosite=0.7, contraste=(0.32, 0.68), graine=0.0, coord="Object"):
+    """Champ de variation d'une surface fabriquée (Lou, 2026-11-14 : « trop nuageux », puis « manque de contraste, la grande tache
+    trop puissante, sans nuance ; une fréquence assez large, 4 ou 5 octaves, une roughness de bruit autour de 0,6-0,8 ») : un seul
+    bruit 4D d'échelle `echelle` mm, `detail` octaves, `rugosite` de bruit (part des petites échelles : contraste fin), légèrement
+    déformé, puis contraste étiré (`contraste` → 0 … 1, en douceur). Renvoie ≈ 0 … 1 centré sur 0,5."""
+    tc = nt.nodes.new("ShaderNodeTexCoord")
+    n = nt.nodes.new("ShaderNodeTexNoise"); n.noise_dimensions = "4D"
+    n.inputs["Scale"].default_value = 1.0 / echelle; n.inputs["W"].default_value = graine
+    n.inputs["Detail"].default_value = detail; n.inputs["Roughness"].default_value = rugosite
+    n.inputs["Distortion"].default_value = 0.25
+    nt.links.new(tc.outputs[coord], n.inputs["Vector"])
+    mr = nt.nodes.new("ShaderNodeMapRange"); mr.interpolation_type = "SMOOTHSTEP"; mr.clamp = True
+    mr.inputs["From Min"].default_value, mr.inputs["From Max"].default_value = contraste
+    nt.links.new(n.outputs["Fac"], mr.inputs["Value"]); return mr.outputs["Result"]
+
+
 def plage(nt, src, a, b, de=(0.3, 0.7)):
     """src (0..1, bruit centré sur 0,5) → a..b (non borné)."""
     mr = nt.nodes.new("ShaderNodeMapRange"); mr.inputs["From Min"].default_value, mr.inputs["From Max"].default_value = de

@@ -26,3 +26,4 @@ Paquet Python importé par les scripts Blender des projets (`import material_lib
 - 2026-11-13 : version 0.3.4 : `rendu.py` (Lou : un script de rendu ne doit plus pouvoir sauter une étape de la méthode — studio maison trop sombre, PLA sans trajets, arêtes vives) ; grain de plateau « lisse ».
 - 2026-11-13 : version 0.3.5 : cordons FDM procéduraux (feature fdm-trajets, chunk-07).
 - 2026-11-14 : version 0.3.6 : couches du plateau lisse (fdm-trajets, chunk-08) ; `noeuds.bruit_multi` ; `rendu.piece_fdm(poussiere=)` ; `imperfections.appliquer(seulement="poussiere")`.
+- 2026-11-14 : version 0.3.7 : rugosité de base des pièces FDM par `noeuds.bruit_zones` (validée par Lou sur la façade du F-COM3 noir).

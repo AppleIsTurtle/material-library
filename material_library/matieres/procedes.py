@@ -86,9 +86,9 @@ def fdm(matiere="pla_noir", buse=0.4, couche=None, axe="Y", plateau=None, transl
     rugo = f["rugosite"] if not isinstance(f["rugosite"], tuple) else sum(f["rugosite"][:2]) / 2
     bp = N.relief(nt, b, _couches(nt, axe, couche), 1.0, 0.025 * couche / 0.2); bp.name = "couches_fdm_relief"   # éteint par trajets()
     b.inputs["Base Color"].default_value = srgb(f["base"])
-    nt.links.new(N.plage(nt, N.bruit_multi(nt, (40.0, 9.0, 2.2), (0.5, 0.33, 0.17), graine=1.0), rugo - 0.08, rugo + 0.04),
-                 b.inputs["Roughness"])     # rugosité qui varie à plusieurs échelles (un bruit unique de 2 mm faisait un moutonnement
-                                            # régulier, Lou 2026-11-14)
+    nt.links.new(N.plage(nt, N.bruit_zones(nt, graine=1.0), rugo - 0.10, rugo + 0.08, de=(0.0, 1.0)),
+                 b.inputs["Roughness"])     # rugosité par zones contrastées : bruit de 25 mm, 4,5 octaves,
+                                            # rugosité de bruit 0,7 (Lou 2026-11-14 : « trop nuageux » avant)
     b.inputs["IOR"].default_value = 1.46
     if f.get("transmission"): b.inputs["Transmission Weight"].default_value = f["transmission"]
     if translucide:
