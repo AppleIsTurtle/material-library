@@ -20,3 +20,4 @@ assemblées hors git : `G:\Blender\Bibliotheque\planches\<planche>\`. Lancer Ble
 - 2026-10-27 : assembler.py pose les images à fond transparent (aperçus d'assets) sur un gris clair (chunk-06).
 - 2026-10-28 : planche_fdm_cordons.py (feature fdm-trajets, chunk-03).
 - 2026-10-28 : planche_fdm_trajets.py ; planche_procedes.py passe aux trajets simulés (chunk-05).
+- 2026-11-14 : `planche_plateau_lisse.py` (chunk-08 de fdm-trajets) : plaque d'essai FDM par `material_library.rendu`, une couche allumée par ligne, reflet d'une boîte à lumière placée dans l'axe miroir de la caméra ; sortie `<DONNEES>\planches\plateau_lisse\`.

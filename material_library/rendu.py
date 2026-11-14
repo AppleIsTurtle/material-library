@@ -62,11 +62,12 @@ def _souder_lisser(ob, souder=True):
 
 
 def piece_fdm(ob, matiere="pla_noir", plateau="-Z", grain="lisse", buse=0.4, res=None, translucide=0.0, trajets=True,
-              arrondi=None, dossier=None, souder=True, res_premier_lit=None, **reglages):
+              arrondi=None, dossier=None, souder=True, res_premier_lit=None, poussiere=0.5, **reglages):
     """Pièce FDM comme imprimée : `plateau` = face posée sur le plateau dans le repère de l'objet (« -Y » : face avant) ; `grain`
     du plateau (procedes.GRAINS ; « lisse » par défaut : plateau lisse de l'imprimeur FDM) ; trajets=False pour une pièce d'une ou
     deux couches posée sur une autre (lettres, cœurs à fleur) : matière FDM seule ; res : côté des cartes des trajets (défaut :
-    automatique ; 4096 garde une grande façade sous 12 Go) ; res_premier_lit : les faces posées sur le plateau deviennent un objet
+    automatique) ; poussiere : force de la poussière fine et éparse (imperfections, seulement la poussière : ni frottements ni
+    traces de doigts sur une pièce FDM, Lou 2026-11-14 ; 0 : aucune) ; res_premier_lit : les faces posées sur le plateau deviennent un objet
     à part (même repère, mêmes trajets) avec leurs propres cartes de ce côté — sur une grande pièce, une carte commune ne résout pas
     les sillons nets du premier lit (≈ 0,1 mm) : ils disparaissent de la face (2026-11-13) ; arrondi : rayon du nœud Bevel (défaut RAYONS["pla"] ; 0 : aucun,
     pour une matière à fleur d'une autre, où il dessinerait un liseré) ; reglages : réglages du tranchage (motif_dessus=…).
@@ -90,6 +91,9 @@ def piece_fdm(ob, matiere="pla_noir", plateau="-Z", grain="lisse", buse=0.4, res
     r = AR.RAYONS["pla"] if arrondi is None else arrondi
     for o, _ in pieces:
         if r: AR.bevel_rendu(o.active_material, r)
+    if poussiere:
+        from .imperfections import imperfections as IM
+        IM.appliquer([o for o, _ in pieces], force=poussiere, seulement="poussiere")
     return ob.active_material
 
 

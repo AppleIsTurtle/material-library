@@ -22,6 +22,33 @@ def bruit(nt, scale, detail=3.0, rough=0.5, coord="Object"):
     nt.links.new(tc.outputs[coord], nz.inputs["Vector"]); return nz
 
 
+def bruit_multi(nt, echelles, poids=None, graine=0.0, coord="Object"):
+    """Aléatoire à plusieurs échelles, sans tuile ni régularité (Lou, 2026-11-14 : « fréquence trop élevée, trop even, répétitif ;
+    il faut de l'aléatoire à différentes échelles ») : une somme de bruits 4D, un par échelle (`echelles` en mm, `poids` relatifs),
+    décorrélés (graine différente), légèrement déformés, et chacun présent par zones (masqué par un bruit trois fois plus large) :
+    pas de motif uniforme. Renvoie une sortie ≈ 0 … 1 centrée sur 0,5 (même usage que bruit(...).outputs["Fac"])."""
+    poids = poids or [1.0 / len(echelles)] * len(echelles)
+    tc = nt.nodes.new("ShaderNodeTexCoord"); somme = None
+    def op(o, x, y):
+        m = nt.nodes.new("ShaderNodeMath"); m.operation = o
+        for k, v in enumerate((x, y)):
+            if isinstance(v, (int, float)): m.inputs[k].default_value = v
+            else: nt.links.new(v, m.inputs[k])
+        return m.outputs[0]
+    def nz(l, w, detail, distorsion):
+        n = nt.nodes.new("ShaderNodeTexNoise"); n.noise_dimensions = "4D"
+        n.inputs["Scale"].default_value = 1.0 / l; n.inputs["W"].default_value = w
+        n.inputs["Detail"].default_value = detail; n.inputs["Roughness"].default_value = 0.55
+        n.inputs["Distortion"].default_value = distorsion
+        nt.links.new(tc.outputs[coord], n.inputs["Vector"]); return n.outputs["Fac"]
+    for i, (l, p_) in enumerate(zip(echelles, poids)):
+        b_ = op("SUBTRACT", nz(l, graine + 17.31 * i, 2.0, 0.35), 0.5)
+        masque = plage(nt, nz(3.0 * l, graine + 53.7 * i + 5.1, 1.0, 0.0), 0.25, 1.0, de=(0.35, 0.65))
+        c_ = op("MULTIPLY", op("MULTIPLY", b_, masque), 2.0 * p_)
+        somme = c_ if somme is None else op("ADD", somme, c_)
+    return op("ADD", somme, 0.5)
+
+
 def plage(nt, src, a, b, de=(0.3, 0.7)):
     """src (0..1, bruit centré sur 0,5) → a..b (non borné)."""
     mr = nt.nodes.new("ShaderNodeMapRange"); mr.inputs["From Min"].default_value, mr.inputs["From Max"].default_value = de

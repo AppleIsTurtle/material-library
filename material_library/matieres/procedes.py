@@ -86,7 +86,9 @@ def fdm(matiere="pla_noir", buse=0.4, couche=None, axe="Y", plateau=None, transl
     rugo = f["rugosite"] if not isinstance(f["rugosite"], tuple) else sum(f["rugosite"][:2]) / 2
     bp = N.relief(nt, b, _couches(nt, axe, couche), 1.0, 0.025 * couche / 0.2); bp.name = "couches_fdm_relief"   # éteint par trajets()
     b.inputs["Base Color"].default_value = srgb(f["base"])
-    nt.links.new(N.plage(nt, N.bruit(nt, 0.5, 3.0).outputs["Fac"], rugo - 0.08, rugo + 0.04), b.inputs["Roughness"])
+    nt.links.new(N.plage(nt, N.bruit_multi(nt, (40.0, 9.0, 2.2), (0.5, 0.33, 0.17), graine=1.0), rugo - 0.08, rugo + 0.04),
+                 b.inputs["Roughness"])     # rugosité qui varie à plusieurs échelles (un bruit unique de 2 mm faisait un moutonnement
+                                            # régulier, Lou 2026-11-14)
     b.inputs["IOR"].default_value = 1.46
     if f.get("transmission"): b.inputs["Transmission Weight"].default_value = f["transmission"]
     if translucide:
@@ -112,8 +114,20 @@ def couches(materiaux, couche=0.2, axe="Y", distance=0.025):
 # grains de plateau (tuile mm, hauteur ± mm, détail et rugosité du bruit) : « fin » = PEI poudré fin (défaut, sans taches au
 # gros plan) ; « granuleux » = plaque d'impression granuleuse du F-COM1 (photo de Lou du 2026-10-26, ancienne façade U1 de la
 # maquette : cellules de 0,35, ± 0,05), voulue pour la façade noire du F-COM2 (Lou, 2026-10-28)
+LISSE_PLAQUES = (40.0, 0.92, 1.08)      # plateau lisse : plaques de brillance larges et douces (≈ 40 mm), rugosité × 0,92 … × 1,08
+                                        # (photo 6.webp ; 8 mm × 0,5 … 1,35 faisait un marbre, 25 mm × 0,85 … 1,15 un moutonnement)
+LIGNES_LISSE = (1.5, 0.05, 0.035)       # plateau lisse, couche 3 : bandes de ≈ 1,5 mm (± 5 % de rugosité) + chaque ligne (± 3,5 %)
+                                        # (± 12 / 8 % : stries trop marquées en vue d'ensemble, Lou 2026-11-14)
+LISSE_ONDULATION = (20.0, 0.004)        # plateau lisse : ondulation douce de ≈ 20 mm, ± 4 µm (reflet légèrement déformé)
 GRAINS = {"fin": (0.06, 0.003, 1.0, 0.4), "granuleux": (0.35, 0.05, 2.0, 0.55),
           "lisse": (0.04, 0.0012, 3.0, 0.5)}   # plateau lisse (Lou, 2026-11-13) : léger grain en relief seul (± 1,2 µm), sans brillance
+
+
+def _couche(nt, nom):
+    """Interrupteur d'une couche du look (chunk-08) : nœud Valeur `couche_<nom>` (1 par défaut) qui multiplie sa contribution ;
+    une planche le met à 0 pour montrer les couches une par une."""
+    v = nt.nodes.new("ShaderNodeValue"); v.name = f"couche_{nom}"; v.label = f"couche {nom}"; v.outputs[0].default_value = 1.0
+    return v.outputs[0]
 
 
 def plateau_texture(m, face="-Y", tuile=None, amp=None, grain="fin"):
@@ -127,6 +141,11 @@ def plateau_texture(m, face="-Y", tuile=None, amp=None, grain="fin"):
     grain = _op(nt, "SUBTRACT", N.bruit(nt, 1 / tuile, detail, rough).outputs["Fac"], 0.5)
     grain = _op(nt, "MULTIPLY", grain, 0.35 / 0.2)                               # ± 0,35 environ, comme avant
     somme = _op(nt, "MULTIPLY", grain, amp / 0.35)
+    if nom_grain == "lisse":              # face sortie d'un plateau lisse (photo de Lou, 2026-11-14, references/6.webp) : léger voile
+        # d'ondulation qui déforme le reflet (≈ 20 mm, quelques µm)
+        l_, a_ = LISSE_ONDULATION
+        ond = _op(nt, "MULTIPLY", _op(nt, "SUBTRACT", N.bruit_multi(nt, (l_ * 2.5, l_, l_ / 3), (0.5, 0.35, 0.15), graine=3.0), 0.5), 2 * a_)
+        somme = _op(nt, "ADD", somme, _op(nt, "MULTIPLY", ond, _couche(nt, "ondulation")))   # couche 1 : planéité
     bp = nt.nodes.new("ShaderNodeBump"); bp.inputs["Distance"].default_value = 1.0; nt.links.new(somme, bp.inputs["Height"])
     tc = nt.nodes.new("ShaderNodeTexCoord"); sep = nt.nodes.new("ShaderNodeSeparateXYZ")
     nt.links.new(tc.outputs["Normal"], sep.inputs["Vector"])
@@ -140,14 +159,22 @@ def plateau_texture(m, face="-Y", tuile=None, amp=None, grain="fin"):
     brille = _op(nt, "MULTIPLY", _op(nt, "MULTIPLY", _op(nt, "MAXIMUM", grain, 0.0), 1 / 0.35), mr.outputs["Result"])
     if nom_grain != "lisse":              # sommets brillants : pas sur le plateau lisse (bruit trop fort et répété, Lou 2026-11-13)
         nt.links.new(_op(nt, "MULTIPLY", r0, _op(nt, "SUBTRACT", 1.0, _op(nt, "MULTIPLY", brille, 0.4))), ri)
+    else:                                 # brillance par plaques (photo 6.webp : reflet nuageux, zones plus mates / plus brillantes
+        l_, f0, f1 = LISSE_PLAQUES        # sur quelques mm à quelques cm : écrasement variable du premier lit), face seule
+        pl = nt.nodes.new("ShaderNodeMapRange"); pl.name = "plateau_plaques"
+        pl.inputs["From Min"].default_value, pl.inputs["From Max"].default_value = 0.35, 0.65
+        pl.inputs["To Min"].default_value, pl.inputs["To Max"].default_value = f0 - 1.0, f1 - 1.0
+        nt.links.new(N.bruit_multi(nt, (l_ * 2.0, l_, l_ / 4), (0.45, 0.4, 0.15), graine=2.0), pl.inputs["Value"])
+        facteur = _op(nt, "ADD", 1.0, _op(nt, "MULTIPLY", _op(nt, "MULTIPLY", pl.outputs["Result"], mr.outputs["Result"]),
+                                          _couche(nt, "plaques")))                      # couche 2 : brillance par zones
+        nt.links.new(_op(nt, "MULTIPLY", r0, facteur), ri)
     return m
 
 
 # ------------------------------------------------------------------ trajets réels de la buse (feature fdm-trajets, chunk-03)
 RELIEF_TRANCHE = 0.22          # creux entre deux couches sur une tranche, en part de la hauteur de couche (0,044 mm en 0,2)
-PLATEAU_LISSE = 3.0            # plateau lisse : sillons du premier lit ×3 (≈ 0,02 mm au lieu de 0,007) ; sur un plateau lisse, les
-                               # lignes du premier lit se lisent dans le reflet de la face (Lou, 2026-11-13 : « on ne voit pas les
-                               # marques du routing, même en macro »)
+PLATEAU_LISSE = 0.5            # plateau lisse : sillons du premier lit × 0,5 (≈ 4 µm) : sur la vraie face (photo 6.webp, 2026-11-14),
+                               # les lignes sont très discrètes, lisibles seulement dans le reflet (×3 le 2026-11-13 : trop marqué)
 ANISOTROPIE = 0.3              # reflet étiré le long du fil
 PROFIL_COUCHE = 6.0            # profil des couches et des cordons : super-ellipse (2 = demi-cercle, trop bombé ; 6 : plat, bord net — Lou,
                                # 2026-11-13 : « dans la vraie vie, plus sharp, moins arrondi »)
@@ -309,13 +336,36 @@ def trajets(o, trajets_npz, res=None, copie=True, dossier=None):
     nt.links.new(bruit(COUPURES[0], 3.0), cp.inputs["Value"]); x = _op(nt, "ADD", x, cp.outputs["Result"])   # coupures sur les bords
     n6 = PROFIL_COUCHE
     profil = _op(nt, "POWER", _op(nt, "MAXIMUM", _op(nt, "SUBTRACT", 1.0, _op(nt, "POWER", _op(nt, "ABSOLUTE", x), n6)), 0.0), 1.0 / n6)
-    h_cordons = _op(nt, "MULTIPLY", _op(nt, "SUBTRACT", profil, 1.0), sco.outputs["Blue"])
+    h_cordons = _op(nt, "MULTIPLY", _op(nt, "MULTIPLY", _op(nt, "SUBTRACT", profil, 1.0), sco.outputs["Blue"]), _couche(nt, "sillons"))
     if m.get("grain") == "lisse":                           # premier lit (z ≤ 0,03 → 0,08 mm) : sillons creusés ×PLATEAU_LISSE
         lit = nt.nodes.new("ShaderNodeMapRange"); lit.name = "plateau_lisse"
         lit.inputs["From Min"].default_value, lit.inputs["From Max"].default_value = 0.03, 0.08
         lit.inputs["To Min"].default_value, lit.inputs["To Max"].default_value = PLATEAU_LISSE, 1.0
         nt.links.new(zp, lit.inputs["Value"]); h_cordons = _op(nt, "MULTIPLY", h_cordons, lit.outputs["Result"])
     hauteur = _op(nt, "ADD", _op(nt, "ADD", h_tranche, sep.outputs["Red"]), h_cordons)
+    if m.get("grain") == "lisse":         # couche 3 (chunk-08) : sur la face sortie du plateau lisse, les lignes se lisent par leur
+        # brillance (pression un peu inégale d'une ligne à l'autre, par bandes de quelques lignes), pas par leur relief (photo 6.webp)
+        fobj = nt.nodes.new("ShaderNodeVectorMath"); fobj.operation = "NORMALIZE"; nt.links.new(tf.outputs["Color"], fobj.inputs[0])
+        perp = nt.nodes.new("ShaderNodeVectorMath"); perp.operation = "CROSS_PRODUCT"
+        nt.links.new(tc.outputs["Normal"], perp.inputs[0]); nt.links.new(fobj.outputs["Vector"], perp.inputs[1])
+        pn = nt.nodes.new("ShaderNodeVectorMath"); pn.operation = "NORMALIZE"; nt.links.new(perp.outputs["Vector"], pn.inputs[0])
+        dp = nt.nodes.new("ShaderNodeVectorMath"); dp.operation = "DOT_PRODUCT"
+        nt.links.new(tc.outputs["Object"], dp.inputs[0]); nt.links.new(pn.outputs["Vector"], dp.inputs[1])
+        travers = dp.outputs["Value"]                                             # mm, à travers les lignes
+        sphase = _op(nt, "DIVIDE", _op(nt, "ARCTAN2", sco.outputs["Green"], sco.outputs["Red"]), 2 * math.pi)
+        ligne = _op(nt, "FLOOR", _op(nt, "ADD", _op(nt, "SUBTRACT", _op(nt, "DIVIDE", travers, pas), sphase), 0.5))   # n° de ligne
+        wl = nt.nodes.new("ShaderNodeTexWhiteNoise"); wl.noise_dimensions = "1D"; nt.links.new(ligne, wl.inputs["W"])
+        bd = nt.nodes.new("ShaderNodeTexNoise"); bd.noise_dimensions = "1D"; bd.inputs["Scale"].default_value = 1.0 / LIGNES_LISSE[0]
+        bd.inputs["Detail"].default_value = 1.0; nt.links.new(travers, bd.inputs["W"])
+        var = _op(nt, "ADD", _op(nt, "MULTIPLY", _op(nt, "SUBTRACT", bd.outputs["Fac"], 0.5), 4 * LIGNES_LISSE[1]),
+                  _op(nt, "MULTIPLY", _op(nt, "SUBTRACT", wl.outputs["Value"], 0.5), 2 * LIGNES_LISSE[2]))
+        lit_ = nt.nodes.new("ShaderNodeMapRange")                                 # premier lit seulement (z ≤ 0,03 → 0,08 mm)
+        lit_.inputs["From Min"].default_value, lit_.inputs["From Max"].default_value = 0.03, 0.08
+        lit_.inputs["To Min"].default_value, lit_.inputs["To Max"].default_value = 1.0, 0.0
+        nt.links.new(zp, lit_.inputs["Value"])
+        var = _op(nt, "MULTIPLY", _op(nt, "MULTIPLY", var, lit_.outputs["Result"]), _couche(nt, "lignes"))
+        ri = b.inputs["Roughness"]; r0 = ri.links[0].from_socket if ri.is_linked else ri.default_value
+        nt.links.new(_op(nt, "MULTIPLY", r0, _op(nt, "ADD", 1.0, var)), ri)
     bp = nt.nodes.new("ShaderNodeBump"); bp.name = "trajets_fdm_relief"
     bp.inputs["Strength"].default_value = 1.0; bp.inputs["Distance"].default_value = 1.0
     nt.links.new(hauteur, bp.inputs["Height"]); _sous_relief(nt, b, bp)
